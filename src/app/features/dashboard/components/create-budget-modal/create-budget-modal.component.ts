@@ -50,7 +50,9 @@ import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
         </div>
         <div class="flex gap-2 mt-6">
           <button (click)="close.emit()" class="flex-1 px-4 py-3 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-white font-semibold transition-colors">{{ 'modal.create_budget.cancel' | translate }}</button>
-          <button (click)="submit()" [disabled]="!name" class="flex-1 px-4 py-3 rounded-xl bg-black dark:bg-white text-white dark:text-black font-semibold hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">{{ 'modal.create_budget.create' | translate }}</button>
+          <button (click)="submit()" [disabled]="type === 'wallet' && !name" class="flex-1 px-4 py-3 rounded-xl bg-black dark:bg-white text-white dark:text-black font-semibold hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+            {{ (type === 'monthly' ? 'wizard.start' : 'modal.create_budget.create') | translate }}
+          </button>
         </div>
       </div>
     </div>
@@ -66,10 +68,15 @@ export class CreateBudgetModalComponent {
 
   @Output() close = new EventEmitter<void>();
   @Output() create = new EventEmitter<{ name: string, color: string, icon: string, type: 'wallet' | 'monthly' }>();
+  @Output() startWizard = new EventEmitter<void>();
 
   submit() {
-    if (this.name) {
-      this.create.emit({ name: this.name, color: this.color, icon: this.icon, type: this.type });
+    if (this.type === 'monthly') {
+      this.startWizard.emit();
+    } else {
+      if (this.name) {
+        this.create.emit({ name: this.name, color: this.color, icon: this.icon, type: this.type });
+      }
     }
   }
 }

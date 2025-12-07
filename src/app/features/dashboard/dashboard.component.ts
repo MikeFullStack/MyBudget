@@ -18,6 +18,7 @@ import { AddGoalModalComponent } from './components/add-goal-modal/add-goal-moda
 import { SavingsGoalCardComponent } from './components/savings-goal-card/savings-goal-card.component';
 import { PieChartComponent } from '../../shared/components/pie-chart/pie-chart.component';
 import { RecurringManagerModalComponent } from './components/recurring-manager-modal/recurring-manager-modal.component';
+import { BudgetWizardComponent } from './components/budget-wizard/budget-wizard.component';
 import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 import { LanguageService } from '../../core/services/language.service';
 
@@ -38,7 +39,9 @@ import { LanguageService } from '../../core/services/language.service';
     SavingsGoalCardComponent,
     PieChartComponent,
     RecurringManagerModalComponent,
-    TranslatePipe
+    RecurringManagerModalComponent,
+    TranslatePipe,
+    BudgetWizardComponent
   ],
   template: `
     <div class="h-screen flex flex-col md:flex-row overflow-hidden bg-[#F5F5F7] dark:bg-[#000000] text-[#1D1D1F] dark:text-gray-100 font-sans transition-colors duration-300">
@@ -184,10 +187,20 @@ import { LanguageService } from '../../core/services/language.service';
       @if (showNewBudgetForm()) {
         <app-create-budget-modal 
             (close)="showNewBudgetForm.set(false)"
+            (startWizard)="showNewBudgetForm.set(false); showWizard.set(true)" 
             (create)="handleCreateBudget($event)"
         ></app-create-budget-modal>
       }
 
+      <!-- Wizard -->
+      @if (showWizard()) {
+        <app-budget-wizard
+            (close)="showWizard.set(false)"
+            (create)="handleCreateBudget($event)"
+        ></app-budget-wizard>
+      }
+
+      <!-- Transaction Modal -->
       @if (showTransactionModal()) {
         <app-transaction-modal
             (close)="showTransactionModal.set(false)"
@@ -230,6 +243,7 @@ export class DashboardComponent {
 
   selectedBudgetId = signal<string>('');
   showNewBudgetForm = signal(false);
+  showWizard = signal(false);
   showTransactionModal = signal(false);
   showGlobalCalculator = signal(false);
   showAddGoalModal = signal(false);
