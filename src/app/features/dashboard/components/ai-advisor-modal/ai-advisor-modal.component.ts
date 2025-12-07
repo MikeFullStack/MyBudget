@@ -2,7 +2,6 @@ import { Component, EventEmitter, Input, Output, signal, inject, ElementRef, Vie
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AiService } from '../../../../core/services/ai.service';
-import { SkeletonComponent } from '../../../../shared/components/skeleton/skeleton.component';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -13,7 +12,7 @@ interface ChatMessage {
 @Component({
   selector: 'app-ai-advisor-modal',
   standalone: true,
-  imports: [CommonModule, SkeletonComponent, FormsModule],
+  imports: [CommonModule, FormsModule],
   template: `
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
       <div class="bg-white dark:bg-gray-900 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border border-gray-100 dark:border-gray-800 flex flex-col h-[80vh] md:h-[90vh]">

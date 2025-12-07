@@ -13,8 +13,8 @@ export class AiService {
         // This allows usage on the Spark (Free) plan.
         const ai = getAI(app, { backend: new GoogleAIBackend() });
 
-        // Using 'gemini-1.5-pro' for high reasoning capability.
-        this.model = getGenerativeModel(ai, { model: 'gemini-1.5-pro' });
+        // Using 'gemini-2.0-flash' as 'gemini-1.5' family is retired (Dec 2025).
+        this.model = getGenerativeModel(ai, { model: 'gemini-2.0-flash-exp' });
     }
 
     async askAdvisor(budgetContext: any, question: string): Promise<string> {
