@@ -178,20 +178,8 @@ export class SidebarComponent {
     }, 30);
 
 
-    // VIEW TRANSITION
-    if (!(document as any).startViewTransition) {
-      this.langService.toggle();
-      return;
-    }
-
-    document.documentElement.dataset['transition'] = 'lang';
-    const transition = (document as any).startViewTransition(() => {
-      this.langService.toggle();
-    });
-
-    transition.finished.then(() => {
-      delete document.documentElement.dataset['transition'];
-    });
+    // VIEW TRANSITION REMOVED - User preference
+    this.langService.toggle();
   }
 
   requestDelete(id: string) {

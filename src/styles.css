@@ -40,38 +40,5 @@ body {
     mix-blend-mode: normal;
 }
 
-/* Language Transition: 3D Cube Rotation */
-@keyframes cubeOut {
-    to {
-        transform: rotateY(-90deg);
-        opacity: 0.5;
-    }
-}
-
-@keyframes cubeIn {
-    from {
-        transform: rotateY(90deg);
-        opacity: 0.5;
-    }
-}
-
-html[data-transition="lang"] {
-    perspective: 1500px;
-    background: #000;
-    /* Dark background during flip */
-}
-
-html[data-transition="lang"]::view-transition-group(root) {
-    animation-duration: 0.6s;
-    transform-style: preserve-3d;
-}
-
-html[data-transition="lang"]::view-transition-old(root) {
-    animation: cubeOut 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-    transform-origin: right center;
-}
-
-html[data-transition="lang"]::view-transition-new(root) {
-    animation: cubeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-    transform-origin: left center;
-}
+/* Language Transition: Standard (Fade) */
+/* Cube Effect Removed by User Request */
