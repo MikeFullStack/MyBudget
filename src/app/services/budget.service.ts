@@ -7,7 +7,10 @@ import {
     onSnapshot,
     query,
     setDoc,
-    updateDoc
+    updateDoc,
+    runTransaction,
+    arrayUnion,
+    arrayRemove
 } from 'firebase/firestore';
 import { db, firebaseConfig } from '../core/firebase-init';
 import { Budget, Transaction } from '../shared/models/budget.models';
@@ -106,14 +109,14 @@ export class BudgetService {
 
     async addTransaction(budgetId: string, transaction: Transaction): Promise<void> {
         const user = this.authService.currentUser();
-        const budget = this.budgets().find(b => b.id === budgetId);
+        if (!user) return;
 
-        if (!user || !budget) return;
-
-        const updatedTransactions = [transaction, ...budget.transactions];
         const ref = doc(this.db, 'artifacts', 'mon-budget', 'users', user.uid, 'budgets', budgetId);
 
-        await updateDoc(ref, { transactions: updatedTransactions });
+        // Atomic Add (Offline Safe)
+        await updateDoc(ref, {
+            transactions: arrayUnion(transaction)
+        });
     }
 
     async deleteTransaction(budgetId: string, transactionId: string): Promise<void> {
@@ -122,10 +125,19 @@ export class BudgetService {
 
         if (!user || !budget) return;
 
-        const updatedTransactions = budget.transactions.filter(t => t.id !== transactionId);
+        // Find the EXACT object reference/value to remove
+        const transactionToRemove = budget.transactions.find(t => t.id === transactionId);
+        if (!transactionToRemove) {
+            console.warn('Transaction not found locally, cannot remove atomically');
+            return;
+        }
+
         const ref = doc(this.db, 'artifacts', 'mon-budget', 'users', user.uid, 'budgets', budgetId);
 
-        await updateDoc(ref, { transactions: updatedTransactions });
+        // Atomic Remove (Offline Safe)
+        await updateDoc(ref, {
+            transactions: arrayRemove(transactionToRemove)
+        });
     }
 
     async deleteBudget(budgetId: string): Promise<void> {
@@ -145,14 +157,12 @@ export class BudgetService {
 
     async addGoal(budgetId: string, goal: import('../shared/models/budget.models').SavingsGoal) {
         const user = this.authService.currentUser();
-        const budget = this.budgets().find(b => b.id === budgetId);
-        if (!user || !budget) return;
+        if (!user) return;
 
-        const currentGoals = budget.goals || [];
-        const updatedGoals = [...currentGoals, goal];
         const ref = doc(this.db, 'artifacts', 'mon-budget', 'users', user.uid, 'budgets', budgetId);
-
-        await updateDoc(ref, { goals: updatedGoals });
+        await updateDoc(ref, {
+            goals: arrayUnion(goal)
+        });
     }
 
     async deleteGoal(budgetId: string, goalId: string) {
@@ -160,10 +170,13 @@ export class BudgetService {
         const budget = this.budgets().find(b => b.id === budgetId);
         if (!user || !budget || !budget.goals) return;
 
-        const updatedGoals = budget.goals.filter(g => g.id !== goalId);
-        const ref = doc(this.db, 'artifacts', 'mon-budget', 'users', user.uid, 'budgets', budgetId);
+        const goal = budget.goals.find(g => g.id === goalId);
+        if (!goal) return;
 
-        await updateDoc(ref, { goals: updatedGoals });
+        const ref = doc(this.db, 'artifacts', 'mon-budget', 'users', user.uid, 'budgets', budgetId);
+        await updateDoc(ref, {
+            goals: arrayRemove(goal)
+        });
     }
 
     async updateGoal(budgetId: string, goal: import('../shared/models/budget.models').SavingsGoal) {
@@ -171,24 +184,26 @@ export class BudgetService {
         const budget = this.budgets().find(b => b.id === budgetId);
         if (!user || !budget || !budget.goals) return;
 
-        const updatedGoals = budget.goals.map(g => g.id === goal.id ? goal : g);
+        const oldGoal = budget.goals.find(g => g.id === goal.id);
+        if (!oldGoal) return;
+
         const ref = doc(this.db, 'artifacts', 'mon-budget', 'users', user.uid, 'budgets', budgetId);
 
-        await updateDoc(ref, { goals: updatedGoals });
+        // Remove old and add new (Simulate Update)
+        await updateDoc(ref, { goals: arrayRemove(oldGoal) });
+        await updateDoc(ref, { goals: arrayUnion(goal) });
     }
 
     // --- Recurring Transactions ---
 
     async addRecurringTransaction(budgetId: string, recurring: import('../shared/models/budget.models').RecurringTransaction) {
         const user = this.authService.currentUser();
-        const budget = this.budgets().find(b => b.id === budgetId);
-        if (!user || !budget) return;
+        if (!user) return;
 
-        const current = budget.recurring || [];
-        const updated = [...current, recurring];
         const ref = doc(this.db, 'artifacts', 'mon-budget', 'users', user.uid, 'budgets', budgetId);
-
-        await updateDoc(ref, { recurring: updated });
+        await updateDoc(ref, {
+            recurring: arrayUnion(recurring)
+        });
     }
 
     async deleteRecurringTransaction(budgetId: string, recurringId: string) {
@@ -196,10 +211,13 @@ export class BudgetService {
         const budget = this.budgets().find(b => b.id === budgetId);
         if (!user || !budget || !budget.recurring) return;
 
-        const updated = budget.recurring.filter(r => r.id !== recurringId);
-        const ref = doc(this.db, 'artifacts', 'mon-budget', 'users', user.uid, 'budgets', budgetId);
+        const toRemove = budget.recurring.find(r => r.id === recurringId);
+        if (!toRemove) return;
 
-        await updateDoc(ref, { recurring: updated });
+        const ref = doc(this.db, 'artifacts', 'mon-budget', 'users', user.uid, 'budgets', budgetId);
+        await updateDoc(ref, {
+            recurring: arrayRemove(toRemove)
+        });
     }
 
     // Process logic to run on load
