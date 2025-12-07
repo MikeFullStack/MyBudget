@@ -1,182 +1,142 @@
-import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject, input, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Budget } from '../../../../shared/models/budget.models';
-import { ExportService } from '../../../../shared/services/export.service';
+import { AuthService } from '../../../../services/auth.service';
 import { ThemeService } from '../../../../core/services/theme.service';
+import { LanguageService } from '../../../../core/services/language.service';
+import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   template: `
-       <aside class="w-full md:w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col h-full transition-colors duration-300 md:h-screen z-20 shadow-sm relative">
-        <div class="p-6 pt-10 flex justify-between items-center">
-          <div>
-              <h1 class="text-2xl font-bold tracking-tight mb-1 text-gray-900 dark:text-white font-sans">Mes Finances</h1>
-              <p class="text-sm text-gray-500 dark:text-gray-400 font-medium flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]"></span>
-                Particulier
-              </p>
-          </div>
-          <button (click)="logout.emit()" class="text-xs font-semibold text-gray-400 hover:text-red-500 transition-colors">Déconnexion</button>
+    <aside class="w-64 bg-[#0F172A] text-white flex flex-col h-full shadow-2xl transition-all duration-300 z-20">
+      
+      <!-- Header -->
+      <div class="p-6 flex items-center justify-between border-b border-gray-800/50">
+        <div>
+           <h1 class="text-2xl font-black bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent tracking-tight">
+             {{ 'app.title' | translate }}
+           </h1>
+           <div class="flex items-center gap-2 mt-1">
+             <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+             <span class="text-xs font-medium text-gray-400">{{ userEmail }}</span>
+           </div>
         </div>
+      </div>
 
-        <div class="flex-1 overflow-y-auto px-4 space-y-6 pb-4">
+      <!-- Actions -->
+      <div class="p-4 space-y-3">
+        <button 
+          (click)="createBudget.emit()"
+          class="w-full py-3 px-4 bg-white text-black rounded-xl font-bold shadow-lg hover:shadow-white/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 group"
+        >
+          <span class="text-lg group-hover:rotate-90 transition-transform">＋</span>
+          {{ 'sidebar.new_budget' | translate }}
+        </button>
+
+        <button 
+          (click)="calculator.emit()"
+          class="w-full py-3 px-4 bg-gray-800/50 text-gray-300 rounded-xl font-semibold hover:bg-gray-800 border border-gray-700/50 hover:border-gray-600 transition-all flex items-center justify-center gap-2"
+        >
+          <span>🧮</span> {{ 'sidebar.calculator' | translate }}
+        </button>
+      </div>
+
+      <!-- Scrollable List -->
+      <div class="flex-1 overflow-y-auto px-4 py-2 space-y-1 scrollbar-hide">
+          <div *ngIf="budgets().length > 0" class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 px-1">Vos Budgets</div>
           
-          <!-- Wallets Section -->
-          <div>
-            <div class="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3 pl-3">Portefeuilles</div>
-            
-            @if (isLoading) {
-              <div class="p-4 text-center text-gray-400 text-sm animate-pulse">Chargement...</div>
-            }
-
-            @for (budget of wallets; track budget.id) {
-              <div class="group relative mb-1">
-                  <button 
-                    (click)="selectBudget.emit(budget.id)"
-                    class="w-full flex items-center justify-between p-3 pl-3 rounded-lg transition-all duration-200"
-                    [ngClass]="selectedBudgetId === budget.id ? 'bg-white dark:bg-gray-800 shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-gray-100 dark:border-gray-700' : 'hover:bg-gray-100/50 dark:hover:bg-gray-800/50 border border-transparent'"
-                  >
-                    <div class="flex items-center gap-3">
-                      <div 
-                        class="w-9 h-9 rounded-lg flex items-center justify-center text-lg shadow-sm transition-transform duration-300 group-hover:scale-105"
-                        [style.background-color]="budget.themeColor"
-                        style="color: white"
-                      >
-                        {{ budget.icon }}
-                      </div>
-                      <div class="text-left">
-                        <div class="font-semibold text-[15px] text-gray-900 dark:text-gray-200 leading-tight">{{ budget.name }}</div>
-                        <div class="text-[11px] font-medium text-gray-500 dark:text-gray-400 mt-0.5">{{ budget.transactions.length }} transactions</div>
-                      </div>
-                    </div>
-                </button>
-                <button 
-                    (click)="$event.stopPropagation(); requestDelete(budget.id)"
-                    class="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 opacity-0 group-hover:opacity-100 transition-all duration-200"
-                    title="Supprimer ce budget"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                </button>
-              </div>
-            }
-
-            @if (!isLoading && wallets.length === 0) {
-                <div class="pl-4 text-xs text-gray-400 italic">Aucun portefeuille</div>
-            }
-          </div>
-
-          <!-- Monthly Planners Section -->
-          <div>
-             <div class="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3 pl-3">Planification</div>
+          <button *ngFor="let budget of budgets()"
+            (click)="selectBudget.emit(budget.id)"
+            class="w-full p-3 rounded-xl text-left transition-all duration-200 group relative overflow-hidden"
+            [class.bg-white]="selectedBudgetId() === budget.id"
+            [class.text-black]="selectedBudgetId() === budget.id"
+            [class.shadow-xl]="selectedBudgetId() === budget.id"
+            [class.hover:bg-gray-800]="selectedBudgetId() !== budget.id"
+            [class.text-gray-400]="selectedBudgetId() !== budget.id"
+          > 
+             <!-- Content -->
+             <div class="relative z-10 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="text-xl filter drop-shadow-md">{{ budget.icon }}</span>
+                    <span class="font-bold truncate max-w-[120px]">{{ budget.name }}</span>
+                </div>
+                <!-- Delete Action (Hover) -->
+                <div class="opacity-0 group-hover:opacity-100 transition-opacity" *ngIf="selectedBudgetId() !== budget.id">
+                    <button 
+                        (click)="$event.stopPropagation(); requestDelete(budget.id)"
+                        class="p-1.5 hover:bg-red-500/20 text-red-500 rounded-lg transition-colors"
+                        title="{{ 'sidebar.delete' | translate }}"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </button>
+                </div>
+             </div>
              
-             @for (budget of planners; track budget.id) {
-              <div class="group relative mb-1">
-                  <button 
-                    (click)="selectBudget.emit(budget.id)"
-                    class="w-full flex items-center justify-between p-3 pl-3 rounded-lg transition-all duration-200"
-                    [ngClass]="selectedBudgetId === budget.id ? 'bg-white dark:bg-gray-800 shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-gray-100 dark:border-gray-700' : 'hover:bg-gray-100/50 dark:hover:bg-gray-800/50 border border-transparent'"
-                  >
-                    <div class="flex items-center gap-3">
-                      <div 
-                        class="w-9 h-9 rounded-lg flex items-center justify-center text-lg shadow-sm transition-transform duration-300 group-hover:scale-105 bg-gray-900 dark:bg-gray-700 text-white"
-                      >
-                        {{ budget.icon }}
-                      </div>
-                      <div class="text-left">
-                        <div class="font-semibold text-[15px] text-gray-900 dark:text-gray-200 leading-tight">{{ budget.name }}</div>
-                        <div class="text-[11px] font-medium text-gray-500 dark:text-gray-400 mt-0.5">Plan Mensuel</div>
-                      </div>
-                    </div>
-                  </button>
-                  <button 
-                    (click)="$event.stopPropagation(); requestDelete(budget.id)"
-                    class="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full text-gray-400 hover:text-red-600 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all duration-200"
-                    title="Supprimer ce plan"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                </button>
-              </div>
-            }
-            @if (!isLoading && planners.length === 0) {
-                <div class="pl-4 text-xs text-gray-400 italic">Aucun plan</div>
-            }
-          </div>
+             <!-- Active Indicator -->
+             <div *ngIf="selectedBudgetId() === budget.id" class="absolute left-0 top-0 bottom-0 w-1 bg-black/20"></div>
+          </button>
+      </div>
 
-          <!-- Actions -->
-          <div class="border-t border-gray-200/50 pt-6 mt-4 px-2 space-y-3">
-            <button (click)="createBudget.emit()" class="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-black text-white hover:bg-gray-800 transition-all text-[13px] font-semibold tracking-wide shadow-lg shadow-gray-200">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                Nouveau Budget
+      <!-- Footer -->
+      <div class="p-4 border-t border-gray-800/50 space-y-2">
+         <!-- Settings / Toggles -->
+         <div class="flex gap-2">
+            <button (click)="toggleTheme()" class="flex-1 py-2 bg-gray-800/50 rounded-lg hover:bg-gray-700 transition-colors text-lg flex items-center justify-center border border-gray-700/50">
+                {{ isDark() ? '☀️' : '🌙' }}
             </button>
+            <button (click)="toggleLang()" class="flex-1 py-2 bg-gray-800/50 rounded-lg hover:bg-gray-700 transition-colors text-lg flex items-center justify-center border border-gray-700/50 font-bold text-xs uppercase text-gray-300">
+                {{ currentLang() === 'fr' ? 'EN' : 'FR' }}
+            </button>
+         </div>
 
-            <button (click)="calculator.emit()" class="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm">
-                <span class="text-lg">🧮</span>
-                <span class="text-[13px] font-semibold">Calculatrice</span>
-            </button>
-          </div>
-        </div>
-        <!-- Footer -->
-      <div class="p-4 border-t border-gray-100 dark:border-gray-800 space-y-2">
-         <!-- Dark Mode Toggle -->
-         <button 
-          (click)="themeService.toggle()"
-          class="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors"
-         >
-            <span class="flex items-center gap-2">
-                <span>{{ themeService.isDark() ? '🌙' : '☀️' }}</span>
-                <span>Thème {{ themeService.isDark() ? 'Sombre' : 'Clair' }}</span>
-            </span>
+         <button (click)="logout.emit()" class="w-full py-2.5 flex items-center justify-center gap-2 text-red-400 hover:bg-red-500/10 rounded-xl transition-all text-sm font-semibold group">
+           <span class="group-hover:-translate-x-1 transition-transform">←</span>
+           {{ 'sidebar.logout' | translate }}
          </button>
-
-         <!-- Export -->
-         <button 
-            (click)="exportData()"
-            class="w-full flex items-center gap-2 px-3 py-2 text-sm font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors"
-         >
-            <span>📄</span>
-            <span>Exporter les données</span>
-         </button>
-
-         <div class="pt-2">
-            <button (click)="logout.emit()" class="w-full flex items-center gap-2 px-4 py-3 text-red-500 font-bold hover:bg-red-50 dark:hover:bg-red-900/10 rounded-xl transition-colors">
-            <span>🚪</span>
-            <span>Déconnexion</span>
-            </button>
-        </div>
       </div>
     </aside>
   `
 })
 export class SidebarComponent {
-  @Input() budgets: Budget[] = [];
-  @Input() selectedBudgetId: string | null = null;
-  @Input() totalBalance: number = 0;
-  @Input() isLoading = false;
+  userEmail = 'Particulier';
+
+  budgets = input<Budget[]>([]);
+  selectedBudgetId = input<string>('');
+  isLoading = input<boolean>(false);
+
+  themeService = inject(ThemeService);
+  langService = inject(LanguageService);
+
+  isDark = this.themeService.isDark;
+  currentLang = this.langService.currentLang;
 
   @Output() selectBudget = new EventEmitter<string>();
   @Output() createBudget = new EventEmitter<void>();
+  @Output() logout = new EventEmitter<void>();
   @Output() deleteBudget = new EventEmitter<string>();
   @Output() calculator = new EventEmitter<void>();
-  @Output() logout = new EventEmitter<void>();
 
-  exportService = inject(ExportService);
-  themeService = inject(ThemeService);
+  constructor() {
+    const auth = inject(AuthService);
+    effect(() => {
+      const u = auth.currentUser();
+      this.userEmail = u?.email || 'Invité';
+    });
+  }
 
-  get wallets() { return this.budgets.filter(b => !b.type || b.type === 'wallet'); }
-  get planners() { return this.budgets.filter(b => b.type === 'monthly'); }
+  toggleTheme() {
+    this.themeService.toggle();
+  }
 
-  exportData() {
-    if (!this.selectedBudgetId) return;
-    const budget = this.budgets.find(b => b.id === this.selectedBudgetId);
-    if (budget) {
-      this.exportService.downloadTransactionsAsCSV(budget.transactions, budget.name);
-    }
+  toggleLang() {
+    this.langService.toggle();
   }
 
   requestDelete(id: string) {
-    if (confirm('Êtes-vous sûr de vouloir supprimer ce budget définitivement ?')) {
+    if (confirm(this.langService.translate('sidebar.delete_confirm'))) {
       this.deleteBudget.emit(id);
     }
   }

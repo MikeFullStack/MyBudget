@@ -18,6 +18,8 @@ import { AddGoalModalComponent } from './components/add-goal-modal/add-goal-moda
 import { SavingsGoalCardComponent } from './components/savings-goal-card/savings-goal-card.component';
 import { PieChartComponent } from '../../shared/components/pie-chart/pie-chart.component';
 import { RecurringManagerModalComponent } from './components/recurring-manager-modal/recurring-manager-modal.component';
+import { TranslatePipe } from '../../shared/pipes/translate.pipe';
+import { LanguageService } from '../../core/services/language.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -35,7 +37,8 @@ import { RecurringManagerModalComponent } from './components/recurring-manager-m
     AddGoalModalComponent,
     SavingsGoalCardComponent,
     PieChartComponent,
-    RecurringManagerModalComponent
+    RecurringManagerModalComponent,
+    TranslatePipe
   ],
   template: `
     <div class="h-screen flex flex-col md:flex-row overflow-hidden bg-[#F5F5F7] dark:bg-[#000000] text-[#1D1D1F] dark:text-gray-100 font-sans transition-colors duration-300">
@@ -56,11 +59,11 @@ import { RecurringManagerModalComponent } from './components/recurring-manager-m
         @if (!currentBudget() && !isLoading() && budgets().length === 0) {
            <div class="h-full flex flex-col items-center justify-center text-gray-400 p-8 animate-fade-in-up">
              <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-4 text-3xl">👋</div>
-             <h2 class="text-xl font-bold text-gray-600 mb-2">Bienvenue</h2>
-             <p class="text-center max-w-md mb-6">Commencez par créer votre premier portefeuille.</p>
+             <h2 class="text-xl font-bold text-gray-600 mb-2">{{ 'dashboard.welcome' | translate }}</h2>
+             <p class="text-center max-w-md mb-6">{{ 'dashboard.create_first' | translate }}</p>
              <div class="flex gap-3">
-               <button (click)="showNewBudgetForm.set(true)" class="px-6 py-3 bg-black text-white rounded-xl shadow-lg hover:bg-gray-800 transition-all font-medium">Créer un budget</button>
-               <button (click)="handleSeedData()" class="px-6 py-3 bg-white text-gray-700 border border-gray-200 rounded-xl shadow-sm hover:bg-gray-50 transition-all font-medium">Mode Démo 🧪</button>
+               <button (click)="showNewBudgetForm.set(true)" class="px-6 py-3 bg-black text-white rounded-xl shadow-lg hover:bg-gray-800 transition-all font-medium">{{ 'dashboard.create_budget' | translate }}</button>
+               <button (click)="handleSeedData()" class="px-6 py-3 bg-white text-gray-700 border border-gray-200 rounded-xl shadow-sm hover:bg-gray-50 transition-all font-medium">{{ 'dashboard.demo_mode' | translate }}</button>
              </div>
            </div>
         }
@@ -218,6 +221,7 @@ export class DashboardComponent {
   private budgetService = inject(BudgetService);
   private router = inject(Router);
   private toast = inject(ToastService);
+  private langService = inject(LanguageService);
 
   budgets = this.budgetService.budgets;
   isLoading = this.budgetService.isLoading;
@@ -424,7 +428,7 @@ export class DashboardComponent {
   }
 
   async handleDeleteGoal(goalId: string) {
-    if (!this.selectedBudgetId() || !confirm('Supprimer cet objectif ?')) return;
+    if (!this.selectedBudgetId() || !confirm(this.langService.translate('dashboard.delete_goal'))) return;
     try {
       await this.budgetService.deleteGoal(this.selectedBudgetId(), goalId);
       this.toast.show('Objectif supprimé', 'success');

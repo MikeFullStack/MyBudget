@@ -8,6 +8,8 @@ import { signal, WritableSignal } from '@angular/core';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { By } from '@angular/platform-browser';
 import { RecurringTransaction, Budget } from '../../shared/models/budget.models';
+import { TranslatePipe } from '../../shared/pipes/translate.pipe';
+import { LanguageService } from '../../core/services/language.service';
 
 // Mock Services
 const mockAuthService = {
@@ -41,6 +43,11 @@ const mockRouter = {
     navigate: vi.fn()
 };
 
+const mockLanguageService = {
+    currentLang: signal('en'),
+    translate: (key: string) => key // Simple mock: returns the key itself
+};
+
 // Tests
 describe('DashboardComponent Integration', () => {
     let component: DashboardComponent;
@@ -62,12 +69,13 @@ describe('DashboardComponent Integration', () => {
         });
 
         await TestBed.configureTestingModule({
-            imports: [DashboardComponent],
+            imports: [DashboardComponent, TranslatePipe],
             providers: [
                 { provide: AuthService, useValue: mockAuthService },
                 { provide: BudgetService, useValue: mockBudgetService },
                 { provide: ToastService, useValue: mockToastService },
-                { provide: Router, useValue: mockRouter }
+                { provide: Router, useValue: mockRouter },
+                { provide: LanguageService, useValue: mockLanguageService }
             ]
         }).compileComponents();
 
