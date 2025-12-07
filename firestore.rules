@@ -1,0 +1,9 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Explicit match for the budgets collection
+    match /artifacts/{appId}/users/{userId}/budgets/{budget} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}

@@ -4,7 +4,10 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build",
+    "build": "npm run build:dev",
+    "build:dev": "cp public/config.dev.json public/config.json && ng build",
+    "build:staging": "cp public/config.staging.json public/config.json && ng build",
+    "build:prod": "cp public/config.prod.json public/config.json && ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
@@ -29,6 +32,8 @@
     "@angular/forms": "^21.0.0",
     "@angular/platform-browser": "^21.0.0",
     "@angular/router": "^21.0.0",
+    "@angular/service-worker": "^21.0.0",
+    "firebase": "^12.6.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },
@@ -36,7 +41,12 @@
     "@angular/build": "^21.0.2",
     "@angular/cli": "^21.0.2",
     "@angular/compiler-cli": "^21.0.0",
+    "@vitest/browser-playwright": "^4.0.15",
+    "autoprefixer": "^10.4.22",
     "jsdom": "^27.1.0",
+    "playwright": "^1.57.0",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.17",
     "typescript": "~5.9.2",
     "vitest": "^4.0.8"
   }

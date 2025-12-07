@@ -1,6 +1,7 @@
-# See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
 
-# Compiled output
+# See http://help.github.com/ignore-files/ for more about ignoring files.
+
+# compiled output
 /dist
 /tmp
 /out-tsc
@@ -10,17 +11,15 @@
 /node_modules
 npm-debug.log
 yarn-error.log
+testem.log
 
 # IDEs and editors
 .idea/
 .project
 .classpath
-.c9/
-*.launch
+.cproject
 .settings/
-*.sublime-workspace
-
-# Visual Studio Code
+*.launch
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
@@ -28,16 +27,21 @@ yarn-error.log
 !.vscode/extensions.json
 .history/*
 
-# Miscellaneous
-/.angular/cache
-.sass-cache/
-/connect.lock
-/coverage
-/libpeerconnection.log
-testem.log
-/typings
-__screenshots__/
-
-# System files
+# System Files
 .DS_Store
 Thumbs.db
+
+# Angular
+.angular/
+.cache/
+
+# Firebase
+.firebase/
+firebase-debug.log
+firebase-export-*
+
+# Environment Configs (if they contain secrets)
+# We keep the templates (prod/dev) but ignore the active copy if needed
+# public/config.json 
+# (In this project, config.json is generated, so we might want to ignore it)
+public/config.json
