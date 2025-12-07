@@ -1,0 +1,39 @@
+{
+    "indexes": [
+        {
+            "collectionGroup": "budgets",
+            "queryScope": "COLLECTION_GROUP",
+            "fields": [
+                {
+                    "fieldPath": "ownerId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "participants",
+                    "arrayConfig": "CONTAINS"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "budgets",
+            "queryScope": "COLLECTION_GROUP",
+            "fields": [
+                {
+                    "fieldPath": "ownerId",
+                    "order": "ASCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "budgets",
+            "queryScope": "COLLECTION_GROUP",
+            "fields": [
+                {
+                    "fieldPath": "participants",
+                    "arrayConfig": "CONTAINS"
+                }
+            ]
+        }
+    ],
+    "fieldOverrides": []
+}
