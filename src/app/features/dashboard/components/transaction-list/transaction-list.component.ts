@@ -15,7 +15,7 @@ import { ScrollingModule } from '@angular/cdk/scrolling';
           <div class="text-center py-10 opacity-50 text-gray-500 dark:text-gray-400">{{ 'list.no_transactions' | translate }}</div>
       } @else {
         <div class="bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
-          <cdk-virtual-scroll-viewport itemSize="74" class="h-[400px] w-full">
+          <cdk-virtual-scroll-viewport itemSize="74" class="h-[400px] w-full" style="height: 400px">
             <div *cdkVirtualFor="let tx of transactions" class="flex items-center justify-between p-4 border-b border-gray-50 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors last:border-0 group h-[74px]">
               <div class="flex items-center gap-4">
                 <div 
