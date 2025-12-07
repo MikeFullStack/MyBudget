@@ -30,6 +30,7 @@ const mockBudgetService = {
     addTransaction: vi.fn().mockResolvedValue(true),
     deleteTransaction: vi.fn().mockResolvedValue(true),
     addGoal: vi.fn().mockResolvedValue(true),
+    updateGoal: vi.fn().mockResolvedValue(true),
     deleteGoal: vi.fn().mockResolvedValue(true),
     addRecurringTransaction: vi.fn().mockResolvedValue(true),
     deleteRecurringTransaction: vi.fn().mockResolvedValue(true)
@@ -242,5 +243,23 @@ describe('DashboardComponent Integration', () => {
         const skeletonAfter = fixture.debugElement.query(By.css('app-skeleton'));
         expect(skeletonAfter).toBeFalsy();
     });
-});
 
+    // --- 9. Gamification (Confetti) ---
+    it('should trigger celebration when goal reached', async () => {
+        const goal = { id: 'g1', name: 'Trip', targetAmount: 1000, currentAmount: 500, icon: '✈️', color: 'blue' };
+        mockBudgetService.budgets.set([{ id: 'b1', name: 'B1', type: 'wallet', transactions: [], goals: [goal], recurring: [] } as any]);
+        fixture.detectChanges();
+
+        // Update goal to target amount
+        await component.handleUpdateGoal(goal, 1000);
+
+        // Expect Toast to show congratulation message (Confetti logic is inside the same block)
+        // Wait for dynamic import
+        await vi.waitFor(() => {
+            expect(mockToastService.show).toHaveBeenCalledWith(
+                expect.stringContaining('Félicitations'),
+                'success'
+            );
+        });
+    });
+});

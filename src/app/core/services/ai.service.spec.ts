@@ -66,4 +66,13 @@ describe('AiService', () => {
 
         await expect(service.analyzeBudget({})).rejects.toThrow('API Error');
     });
+
+    it('should call askAdvisor with correct prompt', async () => {
+        const result = await service.askAdvisor({ income: 100 }, 'How much?');
+        expect(result).toBe('Analysis Result');
+
+        const calledPrompt = mockGenerateContent.mock.calls[0][0];
+        expect(calledPrompt).toContain('How much?');
+        expect(calledPrompt).toContain('"income":100');
+    });
 });
