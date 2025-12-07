@@ -12,6 +12,12 @@ import { RecurringTransaction, Budget } from '../../shared/models/budget.models'
 import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 import { LanguageService } from '../../core/services/language.service';
 
+vi.mock('canvas-confetti', () => {
+    return {
+        default: vi.fn()
+    };
+});
+
 // Mock Services
 const mockAuthService = {
     logout: vi.fn(),

@@ -45,3 +45,11 @@ firebase-export-*
 # public/config.json 
 # (In this project, config.json is generated, so we might want to ignore it)
 public/config.json
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
