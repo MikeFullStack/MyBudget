@@ -1,6 +1,6 @@
 import { FirebaseApp, initializeApp } from 'firebase/app';
 import { Auth, getAuth } from 'firebase/auth';
-import { Firestore, getFirestore } from 'firebase/firestore';
+import { Firestore, getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
 
 export let app: FirebaseApp;
 export let auth: Auth;
@@ -11,5 +11,10 @@ export const initializeFirebase = (config: any) => {
     firebaseConfig = config;
     app = initializeApp(config);
     auth = getAuth(app);
-    db = getFirestore(app);
+    // Enable Offline Persistence with multi-tab support
+    db = initializeFirestore(app, {
+        localCache: persistentLocalCache({
+            tabManager: persistentMultipleTabManager()
+        })
+    });
 };
