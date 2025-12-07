@@ -3,10 +3,10 @@ import { CommonModule } from '@angular/common';
 import { ToastService } from '../../services/toast.service';
 
 @Component({
-    selector: 'app-toast',
-    standalone: true,
-    imports: [CommonModule],
-    template: `
+  selector: 'app-toast',
+  standalone: true,
+  imports: [CommonModule],
+  template: `
     <div class="fixed top-6 right-6 z-50 flex flex-col gap-3 w-full max-w-sm pointer-events-none">
       @for (toast of toastService.toasts(); track toast.id) {
         <div 
@@ -26,14 +26,25 @@ import { ToastService } from '../../services/toast.service';
             }
           </div>
           
-          <p class="text-sm font-semibold tracking-wide pr-2">{{ toast.message }}</p>
+          <div class="flex-1 min-w-0">
+             <p class="text-sm font-semibold tracking-wide pr-2">{{ toast.message }}</p>
+          </div>
           
-          <button (click)="toastService.remove(toast.id)" class="ml-auto opacity-60 hover:opacity-100 transition-opacity">✕</button>
+          @if (toast.action) {
+              <button 
+                (click)="toast.action.onClick(); toastService.remove(toast.id)"
+                class="px-3 py-1 bg-white/20 hover:bg-white/30 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors"
+              >
+                  {{ toast.action.label }}
+              </button>
+          }
+           
+          <button (click)="toastService.remove(toast.id)" class="ml-2 opacity-60 hover:opacity-100 transition-opacity">✕</button>
         </div>
       }
     </div>
   `,
-    styles: [`
+  styles: [`
     @keyframes slideIn {
       from { opacity: 0; transform: translateY(-10px) scale(0.95); }
       to { opacity: 1; transform: translateY(0) scale(1); }
@@ -44,5 +55,5 @@ import { ToastService } from '../../services/toast.service';
   `]
 })
 export class ToastComponent {
-    toastService = inject(ToastService);
+  toastService = inject(ToastService);
 }

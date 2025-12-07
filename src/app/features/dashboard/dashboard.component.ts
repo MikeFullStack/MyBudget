@@ -400,10 +400,29 @@ export class DashboardComponent {
 
   async handleDeleteTransaction(txId: string) {
     if (!this.selectedBudgetId()) return;
+    const currentBudget = this.budgets().find(b => b.id === this.selectedBudgetId());
+    const transaction = currentBudget?.transactions.find(t => t.id === txId);
+
+    if (!transaction) return;
+
     try {
       await this.budgetService.deleteTransaction(this.selectedBudgetId(), txId);
+
+      this.toast.show('Transaction supprimée', 'success', {
+        label: 'ANNULER',
+        onClick: async () => {
+          try {
+            await this.budgetService.addTransaction(this.selectedBudgetId(), transaction);
+            this.toast.show('Transaction restaurée', 'info');
+          } catch (err) {
+            console.error('Failed to restore transaction', err);
+            this.toast.show('Impossible de restaurer', 'error');
+          }
+        }
+      });
     } catch (err) {
       console.error('Failed to delete transaction:', err);
+      this.toast.show('Erreur lors de la suppression', 'error');
     }
   }
 
