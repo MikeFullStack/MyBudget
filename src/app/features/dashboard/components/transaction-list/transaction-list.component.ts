@@ -2,11 +2,12 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Transaction } from '../../../../shared/models/budget.models';
 import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
+import { ScrollingModule } from '@angular/cdk/scrolling';
 
 @Component({
   selector: 'app-transaction-list',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [CommonModule, TranslatePipe, ScrollingModule],
   template: `
     <div class="space-y-4">
       <h3 class="text-lg font-bold text-gray-900 dark:text-white px-2">{{ 'list.history' | translate }}</h3>
@@ -14,8 +15,8 @@ import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
           <div class="text-center py-10 opacity-50 text-gray-500 dark:text-gray-400">{{ 'list.no_transactions' | translate }}</div>
       } @else {
         <div class="bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
-          @for (tx of transactions; track tx.id) {
-            <div class="flex items-center justify-between p-4 border-b border-gray-50 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors last:border-0 group">
+          <cdk-virtual-scroll-viewport itemSize="74" class="h-[400px] w-full">
+            <div *cdkVirtualFor="let tx of transactions" class="flex items-center justify-between p-4 border-b border-gray-50 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors last:border-0 group h-[74px]">
               <div class="flex items-center gap-4">
                 <div 
                   class="w-10 h-10 rounded-full flex items-center justify-center bg-gray-50 dark:bg-gray-800"
@@ -36,11 +37,21 @@ import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
                 <button (click)="delete.emit(tx.id)" class="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-600 transition-colors">x</button>
               </div>
             </div>
-          }
+          </cdk-virtual-scroll-viewport>
         </div>
       }
     </div>
-  `
+  `,
+  styles: [`
+    /* Scrollbar polish for virtual scroll */
+    cdk-virtual-scroll-viewport::-webkit-scrollbar {
+        width: 6px;
+    }
+    cdk-virtual-scroll-viewport::-webkit-scrollbar-thumb {
+        background-color: rgba(156, 163, 175, 0.5);
+        border-radius: 9999px;
+    }
+  `]
 })
 export class TransactionListComponent {
   @Input() transactions: Transaction[] = [];
