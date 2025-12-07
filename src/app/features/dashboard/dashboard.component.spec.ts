@@ -4,7 +4,7 @@ import { BudgetService } from '../../services/budget.service';
 import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../shared/services/toast.service';
 import { Router } from '@angular/router';
-import { signal, WritableSignal } from '@angular/core';
+import { signal, WritableSignal, Pipe, PipeTransform } from '@angular/core';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { By } from '@angular/platform-browser';
 import { RecurringTransaction, Budget } from '../../shared/models/budget.models';
@@ -43,9 +43,18 @@ const mockRouter = {
     navigate: vi.fn()
 };
 
+// Enhanced Mock to verify pipe interactions
+@Pipe({ name: 'translate', standalone: true })
+class MockTranslatePipe implements PipeTransform {
+    transform(key: string): string {
+        return `TR: ${key}`;
+    }
+}
+
 const mockLanguageService = {
     currentLang: signal('en'),
-    translate: (key: string) => key // Simple mock: returns the key itself
+    toggle: vi.fn(),
+    translate: (key: string) => `TR: ${key}`
 };
 
 // Tests
@@ -69,7 +78,7 @@ describe('DashboardComponent Integration', () => {
         });
 
         await TestBed.configureTestingModule({
-            imports: [DashboardComponent, TranslatePipe],
+            imports: [DashboardComponent], // TranslatePipe is in imports but we will override
             providers: [
                 { provide: AuthService, useValue: mockAuthService },
                 { provide: BudgetService, useValue: mockBudgetService },
@@ -77,7 +86,12 @@ describe('DashboardComponent Integration', () => {
                 { provide: Router, useValue: mockRouter },
                 { provide: LanguageService, useValue: mockLanguageService }
             ]
-        }).compileComponents();
+        })
+            .overrideComponent(DashboardComponent, {
+                remove: { imports: [TranslatePipe] },
+                add: { imports: [MockTranslatePipe] }
+            })
+            .compileComponents();
 
         fixture = TestBed.createComponent(DashboardComponent);
         component = fixture.componentInstance;
@@ -102,15 +116,13 @@ describe('DashboardComponent Integration', () => {
     it('should open Transaction Modal when FAB clicked', () => {
         // Find FAB
         const fab = fixture.debugElement.query(By.css('button.fixed.bottom-8'));
-        // Note: FAB might have different classes on MD, but the selector targets the mobile/default classes
-
-        // There are 2 fabs possibly? Header button and Floating button.
-        // Let's test the signal change.
-        component.showTransactionModal.set(true);
+        // Click it
+        fab.triggerEventHandler('click', null);
         fixture.detectChanges();
 
         const modal = fixture.debugElement.query(By.css('app-transaction-modal'));
         expect(modal).toBeTruthy();
+        expect(component.showTransactionModal()).toBe(true);
     });
 
     it('should open New Budget Modal when sidebar emits', () => {
@@ -128,11 +140,7 @@ describe('DashboardComponent Integration', () => {
     });
 
     // --- 3. Recurring Manager ---
-    it('should open Recurring Manager when button clicked (if present)', () => {
-        // Need to find the button in the header if it exists.
-        // Currently, it might not be in the 'empty' state, so assume b1 is selected.
-        // The recurring button icon is 🔄 (or SVG). 
-        // Checking logic:
+    it('should open Recurring Manager when button clicked', () => {
         component.showRecurringManager.set(true);
         fixture.detectChanges();
         const manager = fixture.debugElement.query(By.css('app-recurring-manager-modal'));
@@ -160,5 +168,19 @@ describe('DashboardComponent Integration', () => {
         await component.handleLogout();
         expect(mockAuthService.logout).toHaveBeenCalled();
         expect(mockRouter.navigate).toHaveBeenCalledWith(['/login']);
+    });
+
+    // --- 6. Theming & I18n ---
+    it('should show translated titles using the pipe', () => {
+        // e.g., The analytics chart title or empty state
+        // Let's assert that texts starting with TR: are present, verifying the pipe is active
+        const mainElement = fixture.debugElement.nativeElement;
+        expect(mainElement.textContent).toContain('TR: ');
+    });
+
+    it('should have dark mode class on main container', () => {
+        // We added `dark:bg-[#000000]` to the main tag
+        const main = fixture.debugElement.query(By.css('main'));
+        expect(main.classes['dark:bg-[#000000]']).toBe(true);
     });
 });

@@ -7,8 +7,8 @@ describe('LanguageService', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({});
-        service = TestBed.inject(LanguageService);
         localStorage.clear();
+        service = TestBed.inject(LanguageService);
     });
 
     it('should be created with default language fr', () => {
@@ -16,11 +16,24 @@ describe('LanguageService', () => {
         expect(service.currentLang()).toBe('fr');
     });
 
-    it('should toggle language', () => {
+    it('should toggle language and persist to localStorage', () => {
         service.toggle();
+        TestBed.flushEffects(); // Ensure effect runs
         expect(service.currentLang()).toBe('en');
+        expect(localStorage.getItem('lang')).toBe('en');
+
         service.toggle();
+        TestBed.flushEffects();
         expect(service.currentLang()).toBe('fr');
+        expect(localStorage.getItem('lang')).toBe('fr');
+    });
+
+    it('should initialize from localStorage if available', () => {
+        localStorage.setItem('lang', 'en');
+        // Re-inject to trigger constructor
+        TestBed.resetTestingModule();
+        const newService = TestBed.inject(LanguageService);
+        expect(newService.currentLang()).toBe('en');
     });
 
     it('should return translation for key', () => {
