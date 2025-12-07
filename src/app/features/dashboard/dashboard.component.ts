@@ -612,6 +612,19 @@ export class DashboardComponent {
     try {
       const updated = { ...goal, currentAmount: newAmount };
       await this.budgetService.updateGoal(this.selectedBudgetId(), updated);
+
+      // 🎉 Celebration if goal reached
+      if (newAmount >= goal.targetAmount) {
+        import('canvas-confetti').then((confetti) => {
+          confetti.default({
+            particleCount: 150,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#FFD700', '#FFA500', '#FF4500'] // Gold theme
+          });
+          this.toast.show(`Félicitations ! Objectif "${goal.name}" atteint ! 🏆`, 'success');
+        });
+      }
     } catch (err) {
       console.error('Failed to update goal', err);
       this.toast.show('Erreur de mise à jour', 'error');

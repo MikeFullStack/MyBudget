@@ -17,6 +17,29 @@ export class AiService {
         this.model = getGenerativeModel(ai, { model: 'gemini-1.5-pro' });
     }
 
+    async askAdvisor(budgetContext: any, question: string): Promise<string> {
+        const prompt = `
+      Tu es un expert financier personnel "Mon Budget AI".
+      Le contexte financier (JSON) est :
+      ${JSON.stringify(budgetContext)}
+
+      L'utilisateur te pose cette question : "${question}"
+
+      Réponds de manière concise, précise et amicale. Utilise les données fournies pour justifier ta réponse.
+      Si la réponse ne se trouve pas dans les données, dis-le poliment.
+      Format: Texte brut (pas de Markdown complexe sauf gras/italique). maximum 3 phrases si possible.
+    `;
+
+        try {
+            const result = await this.model.generateContent(prompt);
+            const response = result.response;
+            return response.text();
+        } catch (error) {
+            console.error('AI Chat Error:', error);
+            throw error;
+        }
+    }
+
     async analyzeBudget(budgetContext: any): Promise<string> {
         const prompt = `
       Tu es un expert financier personnel "Mon Budget AI".
