@@ -16,12 +16,14 @@ import { CreateBudgetModalComponent } from './components/create-budget-modal/cre
 import { MonthlyBudgetViewComponent } from './components/monthly-budget-view/monthly-budget-view.component';
 import { AddGoalModalComponent } from './components/add-goal-modal/add-goal-modal.component';
 import { SavingsGoalCardComponent } from './components/savings-goal-card/savings-goal-card.component';
+import { TrendChartComponent } from '../../shared/components/trend-chart/trend-chart.component';
 import { PieChartComponent } from '../../shared/components/pie-chart/pie-chart.component';
 import { RecurringManagerModalComponent } from './components/recurring-manager-modal/recurring-manager-modal.component';
 import { BudgetWizardComponent } from './components/budget-wizard/budget-wizard.component';
 import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 import { LanguageService } from '../../core/services/language.service';
 import { SkeletonComponent } from '../../shared/components/skeleton/skeleton.component';
+import { AiAdvisorModalComponent } from './components/ai-advisor-modal/ai-advisor-modal.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -39,11 +41,12 @@ import { SkeletonComponent } from '../../shared/components/skeleton/skeleton.com
     AddGoalModalComponent,
     SavingsGoalCardComponent,
     PieChartComponent,
+    TrendChartComponent,
     RecurringManagerModalComponent,
-    RecurringManagerModalComponent,
-    TranslatePipe,
     BudgetWizardComponent,
-    SkeletonComponent
+    TranslatePipe,
+    SkeletonComponent,
+    AiAdvisorModalComponent
   ],
   template: `
     <div class="h-screen flex flex-col md:flex-row overflow-hidden bg-[#F5F5F7] dark:bg-[#000000] text-[#1D1D1F] dark:text-gray-100 font-sans transition-colors duration-300">
@@ -117,16 +120,21 @@ import { SkeletonComponent } from '../../shared/components/skeleton/skeleton.com
             <div class="max-w-5xl mx-auto p-4 md:p-10 space-y-8 pb-32">
                 
                 <header class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-8 animate-fade-in-up">
-                <div>
-                    <h2 class="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">{{ budget.name }}</h2>
-                    <p class="text-gray-500 dark:text-gray-400 mt-1">{{ 'dashboard.financial_overview' | translate }}</p>
-                </div>
-                <div class="bg-white dark:bg-gray-800 px-6 py-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col items-end min-w-[200px]">
-                    <span class="text-xs font-semibold text-gray-400 uppercase tracking-wide">{{ 'dashboard.available_balance' | translate }}</span>
-                    <span class="text-3xl font-bold tracking-tight text-gray-900 dark:text-white" [class.text-red-500]="balance() < 0" [class.text-gray-900]="balance() >= 0" [class.dark:text-white]="balance() >= 0">
-                    {{ balance() | currency:'CAD':'symbol-narrow':'1.2-2' }}
-                    </span>
-                </div>
+                    <div>
+                        <div class="flex items-center gap-3">
+                            <h2 class="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">{{ budget.name }}</h2>
+                            <button (click)="showAiAdvisor.set(true)" class="p-2 bg-gradient-to-tr from-blue-500 to-purple-600 rounded-full text-white shadow-md hover:scale-110 transition-transform" title="Conseiller AI">
+                                ✨
+                            </button>
+                        </div>
+                        <p class="text-gray-500 dark:text-gray-400 mt-1">{{ 'dashboard.financial_overview' | translate }}</p>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 px-6 py-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col items-end min-w-[200px]">
+                        <span class="text-xs font-semibold text-gray-400 uppercase tracking-wide">{{ 'dashboard.available_balance' | translate }}</span>
+                        <span class="text-3xl font-bold tracking-tight text-gray-900 dark:text-white" [class.text-red-500]="balance() < 0" [class.text-gray-900]="balance() >= 0" [class.dark:text-white]="balance() >= 0">
+                        {{ balance() | currency:'CAD':'symbol-narrow':'1.2-2' }}
+                        </span>
+                    </div>
                 </header>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -172,7 +180,7 @@ import { SkeletonComponent } from '../../shared/components/skeleton/skeleton.com
                 <!-- View Toggle & Actions -->
                 <div class="flex items-center justify-between mt-8 mb-4">
                      <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ 'dashboard.transactions_title' | translate }}</h3>
-                     <div class="flex bg-gray-200 dark:bg-gray-800 p-1 rounded-lg">
+                     <div class="hidden md:flex bg-gray-200 dark:bg-gray-800 p-1 rounded-lg">
                         <button 
                             (click)="viewMode.set('list')" 
                             class="px-3 py-1 text-xs font-bold rounded-md transition-all"
@@ -194,6 +202,11 @@ import { SkeletonComponent } from '../../shared/components/skeleton/skeleton.com
                             [class.text-gray-500]="viewMode() !== 'analytics'"
                         >{{ 'dashboard.view_analytics' | translate }}</button> 
                      </div>
+                     
+                     <!-- Mobile Toggle (Simplified) -->
+                     <button (click)="toggleViewMode()" class="md:hidden p-2 rounded-full bg-gray-100 dark:bg-gray-800">
+                        {{ viewMode() === 'list' ? '📊' : '📄' }}
+                     </button>
                 </div>
 
                 @if (viewMode() === 'list') {
@@ -203,13 +216,27 @@ import { SkeletonComponent } from '../../shared/components/skeleton/skeleton.com
                     ></app-transaction-list>
                 } @else {
                     <div class="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-800 min-h-[400px]">
-                        @if (chartData().length > 0) {
-                            <h4 class="text-center text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-4">{{ 'analytics.distribution' | translate }}</h4>
-                            <app-pie-chart [data]="chartData()"></app-pie-chart>
-                        } @else {
-                            <div class="flex flex-col items-center justify-center h-full text-gray-400 dark:text-gray-500 italic">
-                                <span>{{ 'analytics.no_data' | translate }}</span>
+                        
+                        <!-- Analysis Type Toggle -->
+                        <div class="flex justify-center mb-6">
+                            <div class="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
+                                <button (click)="analyticsMode.set('distribution')" [class.bg-white]="analyticsMode() === 'distribution'" [class.shadow-sm]="analyticsMode() === 'distribution'" class="px-4 py-1.5 rounded-md text-xs font-bold transition-all text-gray-500" [class.text-black]="analyticsMode() === 'distribution'">Répartition</button>
+                                <button (click)="analyticsMode.set('trend')" [class.bg-white]="analyticsMode() === 'trend'" [class.shadow-sm]="analyticsMode() === 'trend'" class="px-4 py-1.5 rounded-md text-xs font-bold transition-all text-gray-500" [class.text-black]="analyticsMode() === 'trend'">Tendance 6 M</button>
                             </div>
+                        </div>
+
+                        @if (analyticsMode() === 'distribution') {
+                            @if (chartData().length > 0) {
+                                <h4 class="text-center text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-4">{{ 'analytics.distribution' | translate }}</h4>
+                                <app-pie-chart [data]="chartData()"></app-pie-chart>
+                            } @else {
+                                <div class="flex flex-col items-center justify-center h-64 text-gray-400 dark:text-gray-500 italic">
+                                    <span>{{ 'analytics.no_data' | translate }}</span>
+                                </div>
+                            }
+                        } @else {
+                             <!-- Trend View -->
+                             <app-trend-chart [data]="trendData()"></app-trend-chart>
                         }
                     </div>
                 }
@@ -262,6 +289,13 @@ import { SkeletonComponent } from '../../shared/components/skeleton/skeleton.com
         ></app-recurring-manager-modal>
       }
 
+      @if (showAiAdvisor()) {
+        <app-ai-advisor-modal
+            [budgetContext]="aiContext()"
+            (close)="showAiAdvisor.set(false)"
+        ></app-ai-advisor-modal>
+      }
+
     </div>
   `
 })
@@ -281,12 +315,64 @@ export class DashboardComponent {
   showTransactionModal = signal(false);
   showGlobalCalculator = signal(false);
   showAddGoalModal = signal(false);
+  showRecurringManager = signal(false);
 
-  // Analytics
+  // AI Advisor
+  showAiAdvisor = signal(false);
+
+  aiContext = computed(() => {
+    return {
+      income: this.totalIncome(),
+      outcome: this.totalOutcome(),
+      transactions: this.sortedTransactions().slice(0, 50), // Limit payload
+      goals: this.currentBudget()?.goals || []
+    };
+  });
+
+  // State
   viewMode = signal<'list' | 'analytics'>('list');
+  analyticsMode = signal<'distribution' | 'trend'>('distribution');
+
+  toggleViewMode() {
+    this.viewMode.set(this.viewMode() === 'list' ? 'analytics' : 'list');
+  }
+
+  trendData = computed(() => {
+    const transactions = this.sortedTransactions(); // All transactions
+    const months: Record<string, { income: number, outcome: number }> = {};
+
+    // Generate last 6 months keys
+    const today = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      const key = d.toISOString().slice(0, 7); // YYYY-MM
+      months[key] = { income: 0, outcome: 0 };
+    }
+
+    // Fill data
+    transactions.forEach(t => {
+      const key = t.dateStr.slice(0, 7);
+      if (months[key]) {
+        if (t.type === 'income') months[key].income += t.amount;
+        if (t.type === 'outcome') months[key].outcome += t.amount;
+      }
+    });
+
+    // Convert to array
+    const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+
+    return Object.entries(months).map(([key, val]) => {
+      const [y, m] = key.split('-');
+      const period = `${monthNames[parseInt(m) - 1]}`;
+      return {
+        period,
+        income: val.income,
+        outcome: val.outcome
+      };
+    });
+  });
 
   chartData = computed(() => {
-    // Use the existing sortedTransactions signal which is derived from the budget
     const transactions = this.sortedTransactions();
     if (!transactions.length) return [];
 
@@ -544,7 +630,6 @@ export class DashboardComponent {
   }
 
   // --- Recurring Manager ---
-  showRecurringManager = signal(false);
 
   currentBudgetRecurring = computed(() => {
     const b = this.budgets().find(b => b.id === this.selectedBudgetId());

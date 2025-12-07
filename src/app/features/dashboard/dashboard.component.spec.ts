@@ -18,7 +18,7 @@ const mockAuthService = {
 };
 
 const mockBudgets = signal<Budget[]>([
-    { id: 'b1', name: 'Wallet 1', type: 'wallet', transactions: [], themeColor: 'blue', icon: '💰', recurring: [] },
+    { id: 'b1', name: 'Wallet 1', type: 'wallet', transactions: [{ id: 'tx-123', amount: 10, label: 'Test', type: 'outcome', dateStr: '2023-01-01' }], themeColor: 'blue', icon: '💰', recurring: [] },
     { id: 'b2', name: 'Planner 1', type: 'monthly', transactions: [], themeColor: 'green', icon: '📅', recurring: [] }
 ]);
 

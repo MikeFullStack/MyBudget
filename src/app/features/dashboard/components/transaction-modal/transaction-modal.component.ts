@@ -209,6 +209,40 @@ export class TransactionModalComponent {
     this.dateStr = val;
   }
 
+  // ...
+
+  onLabelBlur() {
+    this.suggestCategory();
+  }
+
+  suggestCategory() {
+    // Basic "AI" via Keywords
+    if (this.category !== 'Autre' && this.category) return; // Don't overwrite if already set
+
+    const lowerLabel = this.label.toLowerCase();
+
+    const rules: Record<string, string[]> = {
+      'Alimentation': ['mcdo', 'burger', 'pizza', 'sushi', 'resto', 'bar', 'café', 'starbucks', 'épicerie', 'super', 'market', 'walmart', 'costco', 'pain', 'boulangerie'],
+      'Logement': ['loyer', 'hypothèque', 'hydro', 'électricité', 'gaz', 'internet', 'wifi', 'bell', 'videotron', 'meuble'],
+      'Transport': ['uber', 'taxi', 'bus', 'stm', 'métro', 'train', 'avion', 'essence', 'petro', 'shell', 'parking', 'garage'],
+      'Loisirs': ['cine', 'movie', 'netflix', 'spotify', 'amazon', 'jeu', 'bille'],
+      'Santé': ['pharmacie', 'jean coutu', 'uniprix', 'docteur', 'dentiste', 'gym'],
+      'Shopping': ['amazon', 'vetement', 'zara', 'h&m', 'uniqlo', 'nike'],
+      'Salaire': ['salaire', 'virement', 'paie', 'depot'],
+    };
+
+    for (const [cat, keywords] of Object.entries(rules)) {
+      if (keywords.some(k => lowerLabel.includes(k))) {
+        // Check if category exists in current type list
+        const validList = this.type === 'income' ? this.incomeCategories : this.outcomeCategories;
+        if (validList.includes(cat)) {
+          this.category = cat;
+          return;
+        }
+      }
+    }
+  }
+
   submit() {
     if (this.amount && this.label && this.dateStr) {
       this.save.emit({

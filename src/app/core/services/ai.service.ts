@@ -1,0 +1,48 @@
+import { Injectable } from '@angular/core';
+import { getAI, getGenerativeModel, GenerativeModel, GoogleAIBackend } from 'firebase/ai';
+import { app } from '../firebase-init'; // Assuming you export 'app' from here
+
+@Injectable({
+    providedIn: 'root'
+})
+export class AiService {
+    private model: GenerativeModel;
+
+    constructor() {
+        // Initialize Gemini Developer API (GoogleAIBackend)
+        // This allows usage on the Spark (Free) plan.
+        const ai = getAI(app, { backend: new GoogleAIBackend() });
+
+        // Using 'gemini-1.5-pro' for high reasoning capability.
+        this.model = getGenerativeModel(ai, { model: 'gemini-1.5-pro' });
+    }
+
+    async analyzeBudget(budgetContext: any): Promise<string> {
+        const prompt = `
+      Tu es un expert financier personnel "Mon Budget AI".
+      Analyse les données budgétaires mensuelles suivantes en JSON et donne 3 conseils concrets et brefs (bullet points) pour économiser ou mieux gérer le budget.
+      Sois encourageant but direct. Utilise des emojis.
+      
+      Données:
+      ${JSON.stringify(budgetContext)}
+      
+      Format de réponse souhaité (Markdown):
+      ### 📊 Analyse
+      [Court résumé]
+      
+      ### 💡 Conseils
+      1. [Conseil 1]
+      2. [Conseil 2]
+      3. [Conseil 3]
+    `;
+
+        try {
+            const result = await this.model.generateContent(prompt);
+            const response = result.response;
+            return response.text();
+        } catch (error) {
+            console.error('AI Error:', error);
+            throw error;
+        }
+    }
+}
