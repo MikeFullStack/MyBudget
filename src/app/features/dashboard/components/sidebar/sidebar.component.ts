@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, inject, input, effect } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject, input, effect, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Budget } from '../../../../shared/models/budget.models';
 import { AuthService } from '../../../../services/auth.service';
@@ -87,8 +87,8 @@ import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
             <button (click)="toggleTheme($event)" class="flex-1 py-2 bg-gray-800/50 rounded-lg hover:bg-gray-700 transition-colors text-lg flex items-center justify-center border border-gray-700/50">
                 {{ isDark() ? '☀️' : '🌙' }}
             </button>
-            <button (click)="toggleLang()" class="flex-1 py-2 bg-gray-800/50 rounded-lg hover:bg-gray-700 transition-colors text-lg flex items-center justify-center border border-gray-700/50 font-bold text-xs uppercase text-gray-300">
-                {{ currentLang() === 'fr' ? 'EN' : 'FR' }}
+            <button (click)="toggleLang()" class="flex-1 py-2 bg-gray-800/50 rounded-lg hover:bg-gray-700 transition-colors text-lg flex items-center justify-center border border-gray-700/50 font-bold text-xs uppercase text-gray-300 font-mono">
+                {{ displayedLang() }}
             </button>
          </div>
 
@@ -124,73 +124,71 @@ export class SidebarComponent {
   @Output() calculator = new EventEmitter<void>();
   @Output() exportData = new EventEmitter<void>();
 
+  displayedLang = signal('FR'); // Initialize with default thinking it's FR, but effect will fix it.
+
   constructor() {
     const auth = inject(AuthService);
     effect(() => {
       const u = auth.currentUser();
       this.userEmail = u?.email || 'Invité';
     });
+
+    // Sync displayedLang with real lang initially
+    effect(() => {
+      this.displayedLang.set(this.currentLang() === 'fr' ? 'FR' : 'EN');
+    }, { allowSignalWrites: true });
   }
 
   toggleTheme(event?: MouseEvent) {
-    // 1. Check if View Transitions API is supported
+    // ... (Existing code matches, no change needed here if we only target toggleLang)
+    // To avoid huge replacement, I will assume toggleTheme is unchanged.
+
+    // RE-INSERTING LEADING LINES to match context for replace_file_content...
+    // Wait, I can't partially match easily inside a method, so I'll skip toggleTheme in THIS chunk.
+    // I will just add the scramble logic to toggleLang below.
+
+    // Actually, I need to replace the constructor to add the signal init.
+    // So I will replace from constructor to toggleTheme start.
     if (!(document as any).startViewTransition || !event) {
       this.themeService.toggle();
       return;
     }
-
-    // 2. Get click coordinates
     const x = event.clientX;
     const y = event.clientY;
-
-    // 3. Calculate distance to furthest corner
-    const endRadius = Math.hypot(
-      Math.max(x, innerWidth - x),
-      Math.max(y, innerHeight - y)
-    );
-
-    // 4. Start Transition using global document (cast to any for TS check)
-    const transition = (document as any).startViewTransition(() => {
-      this.themeService.toggle();
-    });
-
-    // 5. Animate Clip Path
+    const endRadius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+    const transition = (document as any).startViewTransition(() => this.themeService.toggle());
     transition.ready.then(() => {
-      const clipPath = [
-        `circle(0px at ${x}px ${y}px)`,
-        `circle(${endRadius}px at ${x}px ${y}px)`
-      ];
-
-      // We always expand the NEW view
-      document.documentElement.animate(
-        {
-          clipPath: clipPath
-        },
-        {
-          duration: 500,
-          easing: 'ease-out',
-          pseudoElement: '::view-transition-new(root)',
-        }
-      );
+      const clipPath = [`circle(0px at ${x}px ${y}px)`, `circle(${endRadius}px at ${x}px ${y}px)`];
+      document.documentElement.animate({ clipPath }, { duration: 500, easing: 'ease-out', pseudoElement: '::view-transition-new(root)' });
     });
   }
 
   toggleLang() {
-    // 1. Check support
+    // SCRAMBLE EFFECT
+    const target = this.currentLang() === 'fr' ? 'EN' : 'FR';
+    let iterations = 0;
+    const interval = setInterval(() => {
+      this.displayedLang.update(v => v.split('').map((letter, index) => {
+        if (index < iterations) return target[index];
+        return 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[Math.floor(Math.random() * 26)];
+      }).join(''));
+
+      if (iterations >= target.length) clearInterval(interval);
+      iterations += 1 / 3;
+    }, 30);
+
+
+    // VIEW TRANSITION
     if (!(document as any).startViewTransition) {
       this.langService.toggle();
       return;
     }
 
-    // 2. Set Transition Type
     document.documentElement.dataset['transition'] = 'lang';
-
-    // 3. Start
     const transition = (document as any).startViewTransition(() => {
       this.langService.toggle();
     });
 
-    // 4. Cleanup
     transition.finished.then(() => {
       delete document.documentElement.dataset['transition'];
     });
