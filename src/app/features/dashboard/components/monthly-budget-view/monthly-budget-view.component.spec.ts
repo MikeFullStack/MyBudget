@@ -18,14 +18,28 @@ const mockToastService = {
     show: vi.fn()
 };
 
-// Mock TranslatePipe to return "Translated: key" for verification
+// Mock TranslatePipe
 @Pipe({ name: 'translate', standalone: true })
 class MockTranslatePipe implements PipeTransform {
     transform(key: string): string {
         return `TR: ${key}`;
     }
 }
-import { Pipe, PipeTransform } from '@angular/core';
+
+import { Pipe, PipeTransform, Directive, Input, ElementRef, inject, OnChanges } from '@angular/core';
+import { TextScrambleDirective } from '../../../../shared/directives/text-scramble.directive';
+
+@Directive({
+    selector: '[appScramble]',
+    standalone: true
+})
+class MockTextScrambleDirective implements OnChanges {
+    @Input('appScramble') text: string = '';
+    private el = inject(ElementRef);
+    ngOnChanges() {
+        this.el.nativeElement.textContent = this.text;
+    }
+}
 
 describe('MonthlyBudgetViewComponent', () => {
     let component: MonthlyBudgetViewComponent;
@@ -63,8 +77,8 @@ describe('MonthlyBudgetViewComponent', () => {
             ]
         })
             .overrideComponent(MonthlyBudgetViewComponent, {
-                remove: { imports: [TranslatePipe] },
-                add: { imports: [MockTranslatePipe] }
+                remove: { imports: [TranslatePipe, TextScrambleDirective] },
+                add: { imports: [MockTranslatePipe, MockTextScrambleDirective] }
             })
             .compileComponents();
 

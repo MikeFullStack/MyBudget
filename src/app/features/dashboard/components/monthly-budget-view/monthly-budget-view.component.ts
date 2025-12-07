@@ -5,11 +5,12 @@ import { Budget, MonthlyExpense } from '../../../../shared/models/budget.models'
 import { BudgetService } from '../../../../services/budget.service';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
+import { TextScrambleDirective } from '../../../../shared/directives/text-scramble.directive';
 
 @Component({
     selector: 'app-monthly-budget-view',
     standalone: true,
-    imports: [CommonModule, FormsModule, TranslatePipe],
+    imports: [CommonModule, FormsModule, TranslatePipe, TextScrambleDirective],
     template: `
     <div class="max-w-6xl mx-auto p-4 md:p-8 space-y-6 pb-32 font-mono text-sm text-gray-900 dark:text-white">
       
@@ -17,12 +18,12 @@ import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
       <header class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-4 border-b border-gray-200 dark:border-gray-700 pb-4 animate-fade-in-up">
           <div>
             <h2 class="text-2xl font-bold text-gray-900 dark:text-white uppercase tracking-widest">{{ _budget()?.name }}</h2>
-            <p class="text-gray-500 dark:text-gray-400 text-xs mt-1 uppercase">{{ 'common.monthly' | translate }}</p>
+            <p class="text-gray-500 dark:text-gray-400 text-xs mt-1 uppercase" [appScramble]="'common.monthly' | translate"></p>
           </div>
           
           <div class="flex items-center gap-4">
              <div class="text-right">
-                <div class="text-[10px] uppercase text-gray-400 font-bold mb-1">{{ 'dashboard.total_income' | translate }}</div>
+                <div class="text-[10px] uppercase text-gray-400 font-bold mb-1" [appScramble]="'dashboard.total_income' | translate"></div>
                 <div class="flex items-center gap-1 justify-end">
                     <span class="text-gray-400">$</span>
                     <input 

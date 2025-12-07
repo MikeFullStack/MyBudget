@@ -25,6 +25,7 @@ import { LanguageService } from '../../core/services/language.service';
 import { SkeletonComponent } from '../../shared/components/skeleton/skeleton.component';
 import { AiAdvisorModalComponent } from './components/ai-advisor-modal/ai-advisor-modal.component';
 import { ShareModalComponent } from './components/share-modal/share-modal.component';
+import { TextScrambleDirective } from '../../shared/directives/text-scramble.directive';
 
 @Component({
   selector: 'app-dashboard',
@@ -48,7 +49,8 @@ import { ShareModalComponent } from './components/share-modal/share-modal.compon
     TranslatePipe,
     SkeletonComponent,
     AiAdvisorModalComponent,
-    ShareModalComponent
+    ShareModalComponent,
+    TextScrambleDirective
   ],
   template: `
     <div class="h-screen flex flex-col md:flex-row overflow-hidden bg-[#F5F5F7] dark:bg-[#000000] text-[#1D1D1F] dark:text-gray-100 font-sans transition-colors duration-300">
@@ -101,11 +103,13 @@ import { ShareModalComponent } from './components/share-modal/share-modal.compon
         @if (!currentBudget() && !isLoading() && budgets().length === 0) {
            <div class="h-full flex flex-col items-center justify-center text-gray-400 p-8 animate-fade-in-up">
              <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-4 text-3xl">👋</div>
-             <h2 class="text-xl font-bold text-gray-600 mb-2">{{ 'dashboard.welcome' | translate }}</h2>
-             <p class="text-center max-w-md mb-6">{{ 'dashboard.create_first' | translate }}</p>
+             <h2 class="text-xl font-bold text-gray-600 mb-2" [appScramble]="'dashboard.welcome' | translate"></h2>
+             <p class="text-center max-w-md mb-6" [appScramble]="'dashboard.create_first' | translate"></p>
              <div class="flex gap-3">
-               <button (click)="showNewBudgetForm.set(true)" class="px-6 py-3 bg-black text-white rounded-xl shadow-lg hover:bg-gray-800 transition-all font-medium">{{ 'dashboard.create_budget' | translate }}</button>
-               <button (click)="handleSeedData()" class="px-6 py-3 bg-white text-gray-700 border border-gray-200 rounded-xl shadow-sm hover:bg-gray-50 transition-all font-medium">{{ 'dashboard.demo_mode' | translate }}</button>
+               <button (click)="showNewBudgetForm.set(true)" class="px-6 py-3 bg-black text-white rounded-xl shadow-lg hover:bg-gray-800 transition-all font-medium" 
+                       [appScramble]="'dashboard.create_budget' | translate"></button>
+               <button (click)="handleSeedData()" class="px-6 py-3 bg-white text-gray-700 border border-gray-200 rounded-xl shadow-sm hover:bg-gray-50 transition-all font-medium"
+                       [appScramble]="'dashboard.demo_mode' | translate"></button>
              </div>
            </div>
         }
@@ -132,10 +136,10 @@ import { ShareModalComponent } from './components/share-modal/share-modal.compon
                                 📤
                             </button>
                         </div>
-                        <p class="text-gray-500 dark:text-gray-400 mt-1">{{ 'dashboard.financial_overview' | translate }}</p>
+                        <p class="text-gray-500 dark:text-gray-400 mt-1" [appScramble]="'dashboard.financial_overview' | translate"></p>
                     </div>
                     <div class="bg-white dark:bg-gray-800 px-6 py-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col items-end min-w-[200px]">
-                        <span class="text-xs font-semibold text-gray-400 uppercase tracking-wide">{{ 'dashboard.available_balance' | translate }}</span>
+                        <span class="text-xs font-semibold text-gray-400 uppercase tracking-wide" [appScramble]="'dashboard.available_balance' | translate"></span>
                         <span class="text-3xl font-bold tracking-tight text-gray-900 dark:text-white" [class.text-red-500]="balance() < 0" [class.text-gray-900]="balance() >= 0" [class.dark:text-white]="balance() >= 0">
                         {{ balance() | currency:'CAD':'symbol-narrow':'1.2-2' }}
                         </span>
@@ -150,9 +154,9 @@ import { ShareModalComponent } from './components/share-modal/share-modal.compon
                 <!-- Goals Section -->
                  <div>
                     <div class="flex items-center justify-between mb-4 px-1">
-                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ 'dashboard.goals_title' | translate }}</h3>
-                        <button (click)="showAddGoalModal.set(true)" class="text-xs font-semibold text-black dark:text-white bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-1.5 rounded-lg transition-colors">
-                            {{ 'dashboard.new_goal' | translate }}
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white" [appScramble]="'dashboard.goals_title' | translate"></h3>
+                        <button (click)="showAddGoalModal.set(true)" class="text-xs font-semibold text-black dark:text-white bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-1.5 rounded-lg transition-colors"
+                        [appScramble]="'dashboard.new_goal' | translate">
                         </button>
                     </div>
                     
@@ -168,8 +172,8 @@ import { ShareModalComponent } from './components/share-modal/share-modal.compon
                         </div>
                     } @else {
                         <div class="p-6 border-2 border-dashed border-gray-100 dark:border-gray-800 rounded-2xl text-center">
-                            <p class="text-gray-400 text-sm">{{ 'dashboard.no_goals' | translate }}</p>
-                            <button (click)="showAddGoalModal.set(true)" class="text-blue-500 text-xs font-semibold mt-1 hover:underline">{{ 'dashboard.create_goal_link' | translate }}</button>
+                            <p class="text-gray-400 text-sm" [appScramble]="'dashboard.no_goals' | translate"></p>
+                            <button (click)="showAddGoalModal.set(true)" class="text-blue-500 text-xs font-semibold mt-1 hover:underline" [appScramble]="'dashboard.create_goal_link' | translate"></button>
                         </div>
                     }
                  </div>
@@ -184,7 +188,7 @@ import { ShareModalComponent } from './components/share-modal/share-modal.compon
 
                 <!-- View Toggle & Actions -->
                 <div class="flex items-center justify-between mt-8 mb-4">
-                     <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ 'dashboard.transactions_title' | translate }}</h3>
+                     <h3 class="text-lg font-bold text-gray-900 dark:text-white" [appScramble]="'dashboard.transactions_title' | translate"></h3>
                      <div class="hidden md:flex bg-gray-200 dark:bg-gray-800 p-1 rounded-lg">
                         <button 
                             (click)="viewMode.set('list')" 
@@ -195,7 +199,8 @@ import { ShareModalComponent } from './components/share-modal/share-modal.compon
                             [class.text-gray-900]="viewMode() === 'list'"
                             [class.dark:text-white]="viewMode() === 'list'"
                             [class.text-gray-500]="viewMode() !== 'list'"
-                        >{{ 'dashboard.view_list' | translate }}</button>
+                            [appScramble]="'dashboard.view_list' | translate"
+                        ></button>
                         <button 
                             (click)="viewMode.set('analytics')" 
                             class="px-3 py-1 text-xs font-bold rounded-md transition-all"
@@ -205,7 +210,8 @@ import { ShareModalComponent } from './components/share-modal/share-modal.compon
                             [class.text-gray-900]="viewMode() === 'analytics'"
                             [class.dark:text-white]="viewMode() === 'analytics'"
                             [class.text-gray-500]="viewMode() !== 'analytics'"
-                        >{{ 'dashboard.view_analytics' | translate }}</button> 
+                            [appScramble]="'dashboard.view_analytics' | translate"
+                        ></button> 
                      </div>
                      
                      <!-- Mobile Toggle (Simplified) -->
@@ -225,18 +231,20 @@ import { ShareModalComponent } from './components/share-modal/share-modal.compon
                         <!-- Analysis Type Toggle -->
                         <div class="flex justify-center mb-6">
                             <div class="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
-                                <button (click)="analyticsMode.set('distribution')" [class.bg-white]="analyticsMode() === 'distribution'" [class.shadow-sm]="analyticsMode() === 'distribution'" class="px-4 py-1.5 rounded-md text-xs font-bold transition-all text-gray-500" [class.text-black]="analyticsMode() === 'distribution'">{{ 'analytics.distribution_label' | translate }}</button>
-                                <button (click)="analyticsMode.set('trend')" [class.bg-white]="analyticsMode() === 'trend'" [class.shadow-sm]="analyticsMode() === 'trend'" class="px-4 py-1.5 rounded-md text-xs font-bold transition-all text-gray-500" [class.text-black]="analyticsMode() === 'trend'">{{ 'analytics.trend_label' | translate }}</button>
+                                <button (click)="analyticsMode.set('distribution')" [class.bg-white]="analyticsMode() === 'distribution'" [class.shadow-sm]="analyticsMode() === 'distribution'" class="px-4 py-1.5 rounded-md text-xs font-bold transition-all text-gray-500" [class.text-black]="analyticsMode() === 'distribution'"
+                                [appScramble]="'analytics.distribution_label' | translate"></button>
+                                <button (click)="analyticsMode.set('trend')" [class.bg-white]="analyticsMode() === 'trend'" [class.shadow-sm]="analyticsMode() === 'trend'" class="px-4 py-1.5 rounded-md text-xs font-bold transition-all text-gray-500" [class.text-black]="analyticsMode() === 'trend'"
+                                [appScramble]="'analytics.trend_label' | translate"></button>
                             </div>
                         </div>
 
                         @if (analyticsMode() === 'distribution') {
                             @if (chartData().length > 0) {
-                                <h4 class="text-center text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-4">{{ 'analytics.distribution' | translate }}</h4>
+                                <h4 class="text-center text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-4" [appScramble]="'analytics.distribution' | translate"></h4>
                                 <app-pie-chart [data]="chartData()"></app-pie-chart>
                             } @else {
                                 <div class="flex flex-col items-center justify-center h-64 text-gray-400 dark:text-gray-500 italic">
-                                    <span>{{ 'analytics.no_data' | translate }}</span>
+                                    <span [appScramble]="'analytics.no_data' | translate"></span>
                                 </div>
                             }
                         } @else {
