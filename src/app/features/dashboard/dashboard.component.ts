@@ -430,17 +430,23 @@ export class DashboardComponent {
         this.selectedBudgetId.set(this.budgets()[0].id);
       }
     });
+
+    effect(() => {
+      const id = this.selectedBudgetId();
+      if (id) {
+        this.budgetService.loadBudgetTransactions(id);
+      }
+    });
   }
 
   currentBudget = computed(() => this.budgets().find(b => b.id === this.selectedBudgetId()));
 
   sortedTransactions = computed(() => {
-    const b = this.currentBudget();
-    return b ? [...b.transactions].sort((a, b) => new Date(b.dateStr).getTime() - new Date(a.dateStr).getTime()) : [];
+    return [...this.budgetService.activeTransactions()].sort((a, b) => new Date(b.dateStr).getTime() - new Date(a.dateStr).getTime());
   });
 
-  totalIncome = computed(() => this.currentBudget()?.transactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0) || 0);
-  totalOutcome = computed(() => this.currentBudget()?.transactions.filter(t => t.type === 'outcome').reduce((acc, t) => acc + t.amount, 0) || 0);
+  totalIncome = computed(() => this.budgetService.activeTransactions().filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0) || 0);
+  totalOutcome = computed(() => this.budgetService.activeTransactions().filter(t => t.type === 'outcome').reduce((acc, t) => acc + t.amount, 0) || 0);
   balance = computed(() => this.totalIncome() - this.totalOutcome());
 
   selectBudget(id: string) { this.selectedBudgetId.set(id); }
@@ -501,8 +507,9 @@ export class DashboardComponent {
 
   async handleDeleteTransaction(txId: string) {
     if (!this.selectedBudgetId()) return;
-    const currentBudget = this.budgets().find(b => b.id === this.selectedBudgetId());
-    const transaction = currentBudget?.transactions.find(t => t.id === txId);
+    const budget = this.budgets().find(b => b.id === this.selectedBudgetId());
+    // Use activeTransactions instead of budget.transactions
+    const transaction = this.budgetService.activeTransactions().find(t => t.id === txId);
 
     if (!transaction) return;
 

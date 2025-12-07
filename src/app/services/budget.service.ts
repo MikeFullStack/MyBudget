@@ -13,7 +13,8 @@ import {
     arrayRemove,
     collectionGroup,
     where,
-    or
+    or,
+    orderBy
 } from 'firebase/firestore';
 import { db, firebaseConfig } from '../core/firebase-init';
 import { Budget, Transaction } from '../shared/models/budget.models';
@@ -32,6 +33,38 @@ export class BudgetService {
     // State
     readonly budgets = signal<Budget[]>([]);
     readonly isLoading = signal<boolean>(true);
+
+    // Subcollection State
+    readonly activeTransactions = signal<Transaction[]>([]);
+    private transactionsUnsub: (() => void) | null = null;
+
+    loadBudgetTransactions(budgetId: string) {
+        // Unsubscribe previous
+        if (this.transactionsUnsub) {
+            this.transactionsUnsub();
+            this.transactionsUnsub = null;
+        }
+
+        const user = this.authService.currentUser();
+        const budget = this.budgets().find(b => b.id === budgetId);
+
+        if (!user || !budget) {
+            this.activeTransactions.set([]);
+            return;
+        }
+
+        const ownerId = budget.ownerId || user.uid;
+        const ref = collection(this.db, 'artifacts', 'mon-budget', 'users', ownerId, 'budgets', budgetId, 'transactions');
+        const q = query(ref, orderBy('dateStr', 'desc')); // Order by date
+
+        this.transactionsUnsub = onSnapshot(q, (snap) => {
+            const txs = snap.docs.map(d => d.data() as Transaction);
+            this.activeTransactions.set(txs);
+        }, (err) => {
+            console.error('Error loading transactions subcollection', err);
+            this.activeTransactions.set([]);
+        });
+    }
 
     constructor() {
         // Réagir automatiquement aux changements d'utilisateur pour charger les données
@@ -112,7 +145,7 @@ export class BudgetService {
                 participants: [],
                 themeColor,
                 icon,
-                transactions: [],
+                // transactions: [], // REMOVED: Managed in subcollection now
                 type,
                 ...initialData
             };
@@ -177,33 +210,30 @@ export class BudgetService {
         const user = this.authService.currentUser();
         if (!user) return;
 
-        const ref = doc(this.db, 'artifacts', 'mon-budget', 'users', user.uid, 'budgets', budgetId);
+        // Determine path: owned vs shared?
+        // Ideally we should know the OWNER of the budget to construct the path.
+        // For now, we assume we are working on a budget we have access to via the known path pattern.
+        // But if it's shared, we need the ownerId.
+        const budget = this.budgets().find(b => b.id === budgetId);
+        if (!budget) throw new Error('Budget not found locally');
 
-        // Atomic Add (Offline Safe)
-        await updateDoc(ref, {
-            transactions: arrayUnion(transaction)
-        });
+        // Path construction: artifacts/mon-budget/users/{ownerId}/budgets/{budgetId}/transactions/{txId}
+        const ownerId = budget.ownerId || user.uid; // Fallback to self if missing (shouldn't happen on new budgets)
+
+        const ref = doc(this.db, 'artifacts', 'mon-budget', 'users', ownerId, 'budgets', budgetId, 'transactions', transaction.id);
+
+        await setDoc(ref, transaction);
     }
 
     async deleteTransaction(budgetId: string, transactionId: string): Promise<void> {
         const user = this.authService.currentUser();
         const budget = this.budgets().find(b => b.id === budgetId);
-
         if (!user || !budget) return;
 
-        // Find the EXACT object reference/value to remove
-        const transactionToRemove = budget.transactions.find(t => t.id === transactionId);
-        if (!transactionToRemove) {
-            console.warn('Transaction not found locally, cannot remove atomically');
-            return;
-        }
+        const ownerId = budget.ownerId || user.uid;
+        const ref = doc(this.db, 'artifacts', 'mon-budget', 'users', ownerId, 'budgets', budgetId, 'transactions', transactionId);
 
-        const ref = doc(this.db, 'artifacts', 'mon-budget', 'users', user.uid, 'budgets', budgetId);
-
-        // Atomic Remove (Offline Safe)
-        await updateDoc(ref, {
-            transactions: arrayRemove(transactionToRemove)
-        });
+        await deleteDoc(ref);
     }
 
     async deleteBudget(budgetId: string): Promise<void> {
@@ -368,7 +398,12 @@ export class BudgetService {
             ];
 
             const ref = doc(this.db, 'artifacts', 'mon-budget', 'users', user.uid, 'budgets', walletId);
-            await updateDoc(ref, { transactions });
+            // await updateDoc(ref, { transactions }); // REMOVED
+
+            // Add to subcollection
+            for (const t of transactions) {
+                await this.addTransaction(walletId, t);
+            }
 
             // 3. Add Goal
             const goal: import('../shared/models/budget.models').SavingsGoal = {
@@ -427,7 +462,11 @@ export class BudgetService {
                 ];
 
                 const mRef = doc(this.db, 'artifacts', 'mon-budget', 'users', user.uid, 'budgets', monthlyId);
-                await updateDoc(mRef, { transactions: mTransactions });
+                // await updateDoc(mRef, { transactions: mTransactions }); // REMOVED
+
+                for (const t of mTransactions) {
+                    await this.addTransaction(monthlyId, t);
+                }
             }
 
         } catch (err) {

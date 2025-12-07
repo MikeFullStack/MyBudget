@@ -32,6 +32,8 @@ const mockBudgets = signal<Budget[]>([
 const mockBudgetService = {
     budgets: mockBudgets,
     isLoading: signal(false),
+    activeTransactions: signal([{ id: 'tx-123', amount: 10, label: 'Test', type: 'outcome', dateStr: '2023-01-01' }]), // Default mock data
+    loadBudgetTransactions: vi.fn(),
     createBudget: vi.fn().mockResolvedValue('new-id'),
     deleteBudget: vi.fn().mockResolvedValue(true),
     addTransaction: vi.fn().mockResolvedValue(true),

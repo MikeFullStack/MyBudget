@@ -51,10 +51,21 @@ describe('BudgetService', () => {
         // Since createBudget is part of the class, we can spy on it?
         // Better: Check side effects (setDoc calls)
 
+        // Since seedDemoData now calls addTransaction which does a lookup of the budget in the local state,
+        // we must mock that state.
+
+        // Mock that the budget was "created" and exists in state
+        (service.budgets as any).set([
+            { id: 'mock-id', ownerId: 'test-user', transactions: [] } // 'mock-id' is what doc().id returns in our mock
+        ]);
+
         await service.seedDemoData();
 
-        // Expect 2 budgets created
-        expect(firestore.setDoc).toHaveBeenCalledTimes(2);
+        // Create Budget calls
+        const setDocCalls = (firestore.setDoc as any).mock.calls;
+        const budgetCalls = setDocCalls.filter((c: any) => c[1].type === 'wallet' || c[1].type === 'monthly');
+
+        expect(budgetCalls.length).toBe(2);
 
         // 1. Wallet
         expect(firestore.setDoc).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
