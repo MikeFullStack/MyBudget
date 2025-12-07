@@ -374,10 +374,13 @@ export class DashboardComponent {
     }
   }
 
-  async handleCreateBudget(data: { name: string, color: string, icon: string, type: 'wallet' | 'monthly' }) {
+  async handleCreateBudget(data: any) {
     try {
-      console.log('Creating budget:', data.name, data.type);
-      const id = await this.budgetService.createBudget(data.name, data.color, data.icon, data.type);
+      console.log('Creating budget:', data);
+      const color = data.color || data.themeColor || '#000000';
+      const extraData = data.monthlyData ? { monthlyData: data.monthlyData } : {};
+
+      const id = await this.budgetService.createBudget(data.name, color, data.icon, data.type, extraData);
 
       if (id) {
         this.selectedBudgetId.set(id);

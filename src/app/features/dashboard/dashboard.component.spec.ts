@@ -183,4 +183,45 @@ describe('DashboardComponent Integration', () => {
         const main = fixture.debugElement.query(By.css('main'));
         expect(main.classes['dark:bg-[#000000]']).toBe(true);
     });
+
+    // --- 7. Budget Creation Logic (Regression Test) ---
+    it('should handle budget creation with themeColor and extra data (Wizard Payload)', async () => {
+        const wizardPayload = {
+            name: 'Wizard Budget',
+            themeColor: 'pink',
+            icon: '🧙',
+            type: 'monthly',
+            monthlyData: { salary: 5000, fixedExpenses: [], variableExpenses: [] }
+        };
+
+        await component.handleCreateBudget(wizardPayload);
+
+        expect(mockBudgetService.createBudget).toHaveBeenCalledWith(
+            'Wizard Budget',
+            'pink', // Should map themeColor -> color param
+            '🧙',
+            'monthly',
+            { monthlyData: wizardPayload.monthlyData } // Extra data
+        );
+        expect(mockToastService.show).toHaveBeenCalledWith('Budget créé avec succès', 'success');
+    });
+
+    it('should handle budget creation with standard payload (Modal Payload)', async () => {
+        const modalPayload = {
+            name: 'Standard Budget',
+            color: 'blue',
+            icon: '💰',
+            type: 'wallet'
+        };
+
+        await component.handleCreateBudget(modalPayload);
+
+        expect(mockBudgetService.createBudget).toHaveBeenCalledWith(
+            'Standard Budget',
+            'blue',
+            '💰',
+            'wallet',
+            {} // Empty extra data
+        );
+    });
 });

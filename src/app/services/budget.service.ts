@@ -60,7 +60,7 @@ export class BudgetService {
 
     // --- CRUD Operations ---
 
-    async createBudget(name: string, themeColor: string, icon: string, type: 'wallet' | 'monthly' = 'wallet') {
+    async createBudget(name: string, themeColor: string, icon: string, type: 'wallet' | 'monthly' = 'wallet', initialData?: any) {
         const user = this.authService.currentUser();
         if (!user) return null;
 
@@ -72,10 +72,11 @@ export class BudgetService {
                 themeColor,
                 icon,
                 transactions: [],
-                type
+                type,
+                ...initialData
             };
 
-            if (type === 'monthly') {
+            if (type === 'monthly' && !newBudget.monthlyData) {
                 newBudget.monthlyData = { salary: 0, fixedExpenses: [], variableExpenses: [] };
             }
 
