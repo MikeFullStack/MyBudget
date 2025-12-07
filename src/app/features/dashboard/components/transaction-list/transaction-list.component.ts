@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { Transaction } from '../../../../shared/models/budget.models';
 import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
 import { ScrollingModule } from '@angular/cdk/scrolling';
+import { SwipeDirective } from '../../../../shared/directives/swipe.directive';
 
 @Component({
   selector: 'app-transaction-list',
   standalone: true,
-  imports: [CommonModule, TranslatePipe, ScrollingModule],
+  imports: [CommonModule, TranslatePipe, ScrollingModule, SwipeDirective],
   template: `
     <div class="space-y-4">
       <h3 class="text-lg font-bold text-gray-900 dark:text-white px-2">{{ 'list.history' | translate }}</h3>
@@ -16,7 +17,9 @@ import { ScrollingModule } from '@angular/cdk/scrolling';
       } @else {
         <div class="bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
           <cdk-virtual-scroll-viewport itemSize="74" class="h-[400px] w-full" style="height: 400px">
-            <div *cdkVirtualFor="let tx of transactions" class="flex items-center justify-between p-4 border-b border-gray-50 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors last:border-0 group h-[74px]">
+            <div *cdkVirtualFor="let tx of transactions" 
+                 appSwipe (swipeLeft)="delete.emit(tx.id)"
+                 class="flex items-center justify-between p-4 border-b border-gray-50 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors last:border-0 group h-[74px]">
               <div class="flex items-center gap-4">
                 <div 
                   class="w-10 h-10 rounded-full flex items-center justify-center bg-gray-50 dark:bg-gray-800"
