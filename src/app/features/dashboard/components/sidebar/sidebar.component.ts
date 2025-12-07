@@ -92,6 +92,10 @@ import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
             </button>
          </div>
 
+         <button (click)="exportData.emit()" class="w-full py-2.5 flex items-center justify-center gap-2 text-blue-400 hover:bg-blue-500/10 rounded-xl transition-all text-sm font-semibold">
+           <span>💾</span> {{ 'sidebar.export' | translate }}
+         </button>
+
          <button (click)="logout.emit()" class="w-full py-2.5 flex items-center justify-center gap-2 text-red-400 hover:bg-red-500/10 rounded-xl transition-all text-sm font-semibold group">
            <span class="group-hover:-translate-x-1 transition-transform">←</span>
            {{ 'sidebar.logout' | translate }}
@@ -118,6 +122,7 @@ export class SidebarComponent {
   @Output() logout = new EventEmitter<void>();
   @Output() deleteBudget = new EventEmitter<string>();
   @Output() calculator = new EventEmitter<void>();
+  @Output() exportData = new EventEmitter<void>();
 
   constructor() {
     const auth = inject(AuthService);

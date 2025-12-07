@@ -57,6 +57,7 @@ import { SkeletonComponent } from '../../shared/components/skeleton/skeleton.com
         (createBudget)="showNewBudgetForm.set(true)"
         (calculator)="showGlobalCalculator.set(true)"
         (deleteBudget)="handleDeleteBudget($event)"
+        (exportData)="handleExportData()"
       ></app-sidebar>
 
       <main class="flex-1 relative overflow-y-auto h-screen bg-[#F5F5F7] dark:bg-[#000000]">
@@ -427,6 +428,12 @@ export class DashboardComponent {
   }
 
   async handleCreateBudget(data: any) {
+    // 🛡️ Limit Check (Abuse Prevention)
+    if (this.budgets().length >= 10) {
+      this.toast.show('Limite de 10 budgets atteinte. Supprimez-en un.', 'error');
+      return;
+    }
+
     try {
       console.log('Creating budget:', data);
       const color = data.color || data.themeColor || '#000000';
@@ -444,6 +451,33 @@ export class DashboardComponent {
     } catch (err) {
       console.error('Failed to create budget:', err);
       this.toast.show('Erreur lors de la création', 'error');
+    }
+  }
+
+  handleExportData() {
+    try {
+      const dataStr = JSON.stringify(this.budgets(), null, 2);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      // Format: mon-budget-backup-YYYY-MM-DD.json
+      const date = new Date().toISOString().split('T')[0];
+      a.download = `mon-budget-backup-${date}.json`;
+
+      document.body.appendChild(a);
+      a.click();
+
+      // Cleanup
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      this.toast.show('Export réussi !', 'success');
+    } catch (err) {
+      console.error('Export failed', err);
+      this.toast.show('Erreur lors de l\'export', 'error');
     }
   }
 
