@@ -54,7 +54,7 @@ import { LanguageService } from '../../core/services/language.service';
         (deleteBudget)="handleDeleteBudget($event)"
       ></app-sidebar>
 
-      <main class="flex-1 relative overflow-y-auto h-screen bg-[#F5F5F7]">
+      <main class="flex-1 relative overflow-y-auto h-screen bg-[#F5F5F7] dark:bg-[#000000]">
         <!-- Empty State -->
         @if (!currentBudget() && !isLoading() && budgets().length === 0) {
            <div class="h-full flex flex-col items-center justify-center text-gray-400 p-8 animate-fade-in-up">
@@ -81,12 +81,12 @@ import { LanguageService } from '../../core/services/language.service';
                 
                 <header class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-8 animate-fade-in-up">
                 <div>
-                    <h2 class="text-3xl font-bold text-gray-900 tracking-tight">{{ budget.name }}</h2>
-                    <p class="text-gray-500 mt-1">Aperçu financier actuel</p>
+                    <h2 class="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">{{ budget.name }}</h2>
+                    <p class="text-gray-500 dark:text-gray-400 mt-1">{{ 'dashboard.financial_overview' | translate }}</p>
                 </div>
-                <div class="bg-white px-6 py-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-end min-w-[200px]">
-                    <span class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Solde Disponible</span>
-                    <span class="text-3xl font-bold tracking-tight" [class.text-red-500]="balance() < 0" [class.text-gray-900]="balance() >= 0">
+                <div class="bg-white dark:bg-gray-800 px-6 py-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col items-end min-w-[200px]">
+                    <span class="text-xs font-semibold text-gray-400 uppercase tracking-wide">{{ 'dashboard.available_balance' | translate }}</span>
+                    <span class="text-3xl font-bold tracking-tight text-gray-900 dark:text-white" [class.text-red-500]="balance() < 0" [class.text-gray-900]="balance() >= 0" [class.dark:text-white]="balance() >= 0">
                     {{ balance() | currency:'CAD':'symbol-narrow':'1.2-2' }}
                     </span>
                 </div>
@@ -100,9 +100,9 @@ import { LanguageService } from '../../core/services/language.service';
                 <!-- Goals Section -->
                  <div>
                     <div class="flex items-center justify-between mb-4 px-1">
-                        <h3 class="text-lg font-bold text-gray-900">Objectifs Épargne</h3>
-                        <button (click)="showAddGoalModal.set(true)" class="text-xs font-semibold text-black bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-lg transition-colors">
-                            + Nouveau
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ 'dashboard.goals_title' | translate }}</h3>
+                        <button (click)="showAddGoalModal.set(true)" class="text-xs font-semibold text-black dark:text-white bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-1.5 rounded-lg transition-colors">
+                            {{ 'dashboard.new_goal' | translate }}
                         </button>
                     </div>
                     
@@ -117,9 +117,9 @@ import { LanguageService } from '../../core/services/language.service';
                             }
                         </div>
                     } @else {
-                        <div class="p-6 border-2 border-dashed border-gray-100 rounded-2xl text-center">
-                            <p class="text-gray-400 text-sm">Aucun objectif défini</p>
-                            <button (click)="showAddGoalModal.set(true)" class="text-blue-500 text-xs font-semibold mt-1 hover:underline">Créer un objectif</button>
+                        <div class="p-6 border-2 border-dashed border-gray-100 dark:border-gray-800 rounded-2xl text-center">
+                            <p class="text-gray-400 text-sm">{{ 'dashboard.no_goals' | translate }}</p>
+                            <button (click)="showAddGoalModal.set(true)" class="text-blue-500 text-xs font-semibold mt-1 hover:underline">{{ 'dashboard.create_goal_link' | translate }}</button>
                         </div>
                     }
                  </div>
@@ -127,33 +127,35 @@ import { LanguageService } from '../../core/services/language.service';
                 <!-- Floating Action Button for Adding Transaction -->
                 <button 
                 (click)="showTransactionModal.set(true)"
-                class="fixed bottom-8 right-8 md:absolute md:bottom-auto md:right-0 md:top-24 md:mr-10 z-30 w-14 h-14 bg-black text-white rounded-full shadow-xl flex items-center justify-center text-2xl hover:scale-105 transition-transform"
+                class="fixed bottom-8 right-8 md:absolute md:bottom-auto md:right-0 md:top-24 md:mr-10 z-30 w-14 h-14 bg-black dark:bg-white text-white dark:text-black rounded-full shadow-xl flex items-center justify-center text-2xl hover:scale-105 transition-transform"
                 >
                 +
                 </button>
 
-                <!-- <app-transaction-form (add)="handleAddTransaction($event)"></app-transaction-form> -->
-
                 <!-- View Toggle & Actions -->
                 <div class="flex items-center justify-between mt-8 mb-4">
-                     <h3 class="text-lg font-bold text-gray-900">Transactions</h3>
-                     <div class="flex bg-gray-200 p-1 rounded-lg">
+                     <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ 'dashboard.transactions_title' | translate }}</h3>
+                     <div class="flex bg-gray-200 dark:bg-gray-800 p-1 rounded-lg">
                         <button 
                             (click)="viewMode.set('list')" 
                             class="px-3 py-1 text-xs font-bold rounded-md transition-all"
                             [class.bg-white]="viewMode() === 'list'"
+                            [class.dark:bg-gray-700]="viewMode() === 'list'"
                             [class.shadow-sm]="viewMode() === 'list'"
                             [class.text-gray-900]="viewMode() === 'list'"
+                            [class.dark:text-white]="viewMode() === 'list'"
                             [class.text-gray-500]="viewMode() !== 'list'"
-                        >Liste</button>
+                        >{{ 'dashboard.view_list' | translate }}</button>
                         <button 
                             (click)="viewMode.set('analytics')" 
                             class="px-3 py-1 text-xs font-bold rounded-md transition-all"
                             [class.bg-white]="viewMode() === 'analytics'"
+                            [class.dark:bg-gray-700]="viewMode() === 'analytics'"
                             [class.shadow-sm]="viewMode() === 'analytics'"
                             [class.text-gray-900]="viewMode() === 'analytics'"
+                            [class.dark:text-white]="viewMode() === 'analytics'"
                             [class.text-gray-500]="viewMode() !== 'analytics'"
-                        >Analyses</button>
+                        >{{ 'dashboard.view_analytics' | translate }}</button> 
                      </div>
                 </div>
 
@@ -163,13 +165,13 @@ import { LanguageService } from '../../core/services/language.service';
                     (delete)="handleDeleteTransaction($event)"
                     ></app-transaction-list>
                 } @else {
-                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 min-h-[400px]">
+                    <div class="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-800 min-h-[400px]">
                         @if (chartData().length > 0) {
-                            <h4 class="text-center text-sm font-bold text-gray-500 uppercase tracking-widest mb-4">Répartition des Dépenses</h4>
+                            <h4 class="text-center text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-4">{{ 'analytics.distribution' | translate }}</h4>
                             <app-pie-chart [data]="chartData()"></app-pie-chart>
                         } @else {
-                            <div class="flex flex-col items-center justify-center h-full text-gray-400 italic">
-                                <span>Aucune donnée de dépense à analyser</span>
+                            <div class="flex flex-col items-center justify-center h-full text-gray-400 dark:text-gray-500 italic">
+                                <span>{{ 'analytics.no_data' | translate }}</span>
                             </div>
                         }
                     </div>

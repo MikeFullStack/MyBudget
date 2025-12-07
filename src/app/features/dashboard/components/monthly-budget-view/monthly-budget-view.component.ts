@@ -4,31 +4,32 @@ import { FormsModule } from '@angular/forms';
 import { Budget, MonthlyExpense } from '../../../../shared/models/budget.models';
 import { BudgetService } from '../../../../services/budget.service';
 import { ToastService } from '../../../../shared/services/toast.service';
+import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
 
 @Component({
     selector: 'app-monthly-budget-view',
     standalone: true,
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, TranslatePipe],
     template: `
-    <div class="max-w-6xl mx-auto p-4 md:p-8 space-y-6 pb-32 font-mono text-sm">
+    <div class="max-w-6xl mx-auto p-4 md:p-8 space-y-6 pb-32 font-mono text-sm text-gray-900 dark:text-white">
       
       <!-- Header -->
-      <header class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-4 border-b border-gray-200 pb-4 animate-fade-in-up">
+      <header class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-4 border-b border-gray-200 dark:border-gray-700 pb-4 animate-fade-in-up">
           <div>
-            <h2 class="text-2xl font-bold text-gray-900 uppercase tracking-widest">{{ _budget()?.name }}</h2>
-            <p class="text-gray-500 text-xs mt-1 uppercase">Exercice Mensuel</p>
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white uppercase tracking-widest">{{ _budget()?.name }}</h2>
+            <p class="text-gray-500 dark:text-gray-400 text-xs mt-1 uppercase">{{ 'common.monthly' | translate }}</p>
           </div>
           
           <div class="flex items-center gap-4">
              <div class="text-right">
-                <div class="text-[10px] uppercase text-gray-400 font-bold mb-1">Revenus Totaux</div>
+                <div class="text-[10px] uppercase text-gray-400 font-bold mb-1">{{ 'dashboard.total_income' | translate }}</div>
                 <div class="flex items-center gap-1 justify-end">
                     <span class="text-gray-400">$</span>
                     <input 
                         type="number" 
                         [ngModel]="salary()" 
                         (ngModelChange)="updateSalary($event)"
-                        class="text-xl font-bold text-gray-900 bg-transparent border-b border-dashed border-gray-300 focus:border-black focus:ring-0 p-0 w-32 text-right placeholder-gray-300 transition-colors" 
+                        class="text-xl font-bold text-gray-900 dark:text-white bg-transparent border-b border-dashed border-gray-300 dark:border-gray-700 focus:border-black dark:focus:border-white focus:ring-0 p-0 w-32 text-right placeholder-gray-300 transition-colors" 
                         placeholder="0.00"
                     >
                 </div>
@@ -38,52 +39,52 @@ import { ToastService } from '../../../../shared/services/toast.service';
 
       <!-- Executive Summary -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div class="p-4 bg-gray-50 border border-gray-200 rounded-lg">
-             <div class="text-[10px] uppercase text-gray-500 font-bold mb-1">Revenu Mensuel</div>
-             <div class="text-lg font-bold text-gray-900">{{ salary() | currency:'CAD':'symbol-narrow':'1.2-2' }}</div>
+          <div class="p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+             <div class="text-[10px] uppercase text-gray-500 dark:text-gray-400 font-bold mb-1">Revenu Mensuel</div>
+             <div class="text-lg font-bold text-gray-900 dark:text-white">{{ salary() | currency:'CAD':'symbol-narrow':'1.2-2' }}</div>
           </div>
-          <div class="p-4 bg-gray-50 border border-gray-200 rounded-lg">
-             <div class="text-[10px] uppercase text-gray-500 font-bold mb-1">Total Fixe</div>
-             <div class="text-lg font-bold text-red-600">-{{ totalFixed() | currency:'CAD':'symbol-narrow':'1.2-2' }}</div>
+          <div class="p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+             <div class="text-[10px] uppercase text-gray-500 dark:text-gray-400 font-bold mb-1">Total Fixe</div>
+             <div class="text-lg font-bold text-red-600 dark:text-red-400">-{{ totalFixed() | currency:'CAD':'symbol-narrow':'1.2-2' }}</div>
              <div class="text-[10px] text-gray-400 mt-1">{{ fixedRatio() | percent:'1.1-1' }} du revenu</div>
           </div>
-          <div class="p-4 bg-gray-50 border border-gray-200 rounded-lg">
-             <div class="text-[10px] uppercase text-gray-500 font-bold mb-1">Total Variable</div>
-             <div class="text-lg font-bold text-orange-600">-{{ totalVariable() | currency:'CAD':'symbol-narrow':'1.2-2' }}</div>
+          <div class="p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+             <div class="text-[10px] uppercase text-gray-500 dark:text-gray-400 font-bold mb-1">Total Variable</div>
+             <div class="text-lg font-bold text-orange-600 dark:text-orange-400">-{{ totalVariable() | currency:'CAD':'symbol-narrow':'1.2-2' }}</div>
              <div class="text-[10px] text-gray-400 mt-1">{{ variableRatio() | percent:'1.1-1' }} du revenu</div>
           </div>
-          <div class="p-4 bg-gray-900 text-white border border-gray-900 rounded-lg shadow-md">
-             <div class="text-[10px] uppercase text-gray-400 font-bold mb-1">Capacité Nette</div>
+          <div class="p-4 bg-gray-900 dark:bg-white text-white dark:text-black border border-gray-900 dark:border-white rounded-lg shadow-md">
+             <div class="text-[10px] uppercase text-gray-400 dark:text-gray-600 font-bold mb-1">Capacité Nette</div>
              <div class="text-2xl font-bold">{{ remaining() | currency:'CAD':'symbol-narrow':'1.2-2' }}</div>
-             <div class="text-[10px] text-gray-400 mt-1">{{ remainingRatio() | percent:'1.1-1' }} de marge</div>
+             <div class="text-[10px] text-gray-400 dark:text-gray-600 mt-1">{{ remainingRatio() | percent:'1.1-1' }} de marge</div>
           </div>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <!-- Fixed Expenses Table -->
-          <section class="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
-              <div class="bg-gray-50 px-4 py-3 border-b border-gray-200 flex justify-between items-center">
-                  <h3 class="font-bold text-gray-700 uppercase text-xs tracking-wider flex items-center gap-2">
+          <section class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-900 shadow-sm">
+              <div class="bg-gray-50 dark:bg-gray-800 px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                  <h3 class="font-bold text-gray-700 dark:text-gray-300 uppercase text-xs tracking-wider flex items-center gap-2">
                       <div class="w-2 h-2 bg-red-500 rounded-full"></div>
                       Charges Fixes
                   </h3>
-                  <span class="text-xs font-bold text-gray-500">{{ totalFixed() | currency:'CAD':'symbol-narrow':'1.0-0' }}</span>
+                  <span class="text-xs font-bold text-gray-500 dark:text-gray-400">{{ totalFixed() | currency:'CAD':'symbol-narrow':'1.0-0' }}</span>
               </div>
               
               <table class="w-full text-left border-collapse">
                   <thead>
-                      <tr class="text-[10px] text-gray-400 uppercase border-b border-gray-100">
+                      <tr class="text-[10px] text-gray-400 uppercase border-b border-gray-100 dark:border-gray-800">
                           <th class="px-4 py-2 font-medium w-1/2">Poste</th>
                           <th class="px-4 py-2 font-medium text-right">Montant</th>
                           <th class="px-4 py-2 font-medium text-right">% Rev.</th>
                           <th class="px-4 py-2 text-right w-10"></th>
                       </tr>
                   </thead>
-                  <tbody class="divide-y divide-gray-50">
+                  <tbody class="divide-y divide-gray-50 dark:divide-gray-800">
                       @for (item of fixedExpenses(); track item.id) {
-                          <tr class="hover:bg-gray-50 group transition-colors">
-                              <td class="px-4 py-2 text-gray-700 font-medium">{{ item.label }}</td>
-                              <td class="px-4 py-2 text-right text-gray-900 font-bold">{{ item.amount | currency:'CAD':'':'1.2-2' }}</td>
+                          <tr class="hover:bg-gray-50 dark:hover:bg-gray-800 group transition-colors">
+                              <td class="px-4 py-2 text-gray-700 dark:text-gray-300 font-medium">{{ item.label }}</td>
+                              <td class="px-4 py-2 text-right text-gray-900 dark:text-white font-bold">{{ item.amount | currency:'CAD':'':'1.2-2' }}</td>
                               <td class="px-4 py-2 text-right text-gray-400 text-xs">{{ (salary() > 0 ? item.amount / salary() : 0) | percent:'1.1-1' }}</td>
                               <td class="px-4 py-2 text-right">
                                   <button (click)="removeItem('fixed', item.id)" class="text-gray-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 px-2">×</button>
@@ -94,16 +95,16 @@ import { ToastService } from '../../../../shared/services/toast.service';
                           <tr><td colspan="4" class="px-4 py-6 text-center text-gray-300 italic text-xs">Aucune charge fixe</td></tr>
                       }
                   </tbody>
-                  <tfoot class="bg-gray-50 border-t border-gray-200">
+                  <tfoot class="bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
                       <tr>
                           <td class="p-2">
-                              <input type="text" [(ngModel)]="newFixedLabel" (keyup.enter)="addItem('fixed')" class="w-full bg-white border border-gray-300 rounded px-2 py-1 text-xs focus:ring-1 focus:ring-black focus:border-black" placeholder="Nouveau poste...">
+                              <input type="text" [(ngModel)]="newFixedLabel" (keyup.enter)="addItem('fixed')" class="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-xs focus:ring-1 focus:ring-black dark:focus:ring-white focus:border-black dark:focus:border-white dark:text-white" placeholder="Nouveau poste...">
                           </td>
                           <td class="p-2">
-                              <input type="number" [(ngModel)]="newFixedAmount" (keyup.enter)="addItem('fixed')" class="w-full bg-white border border-gray-300 rounded px-2 py-1 text-xs text-right font-bold focus:ring-1 focus:ring-black focus:border-black" placeholder="0.00">
+                              <input type="number" [(ngModel)]="newFixedAmount" (keyup.enter)="addItem('fixed')" class="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-xs text-right font-bold focus:ring-1 focus:ring-black dark:focus:ring-white focus:border-black dark:focus:border-white dark:text-white" placeholder="0.00">
                           </td>
                           <td colspan="2" class="p-2 text-right">
-                              <button (click)="addItem('fixed')" [disabled]="!newFixedLabel || !newFixedAmount" class="bg-black text-white px-3 py-1 rounded text-xs font-bold hover:bg-gray-800 disabled:opacity-50 transition-colors uppercase tracking-wide">Ajouter</button>
+                              <button (click)="addItem('fixed')" [disabled]="!newFixedLabel || !newFixedAmount" class="bg-black dark:bg-white text-white dark:text-black px-3 py-1 rounded text-xs font-bold hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50 transition-colors uppercase tracking-wide">Ajouter</button>
                           </td>
                       </tr>
                   </tfoot>
@@ -111,29 +112,29 @@ import { ToastService } from '../../../../shared/services/toast.service';
           </section>
 
           <!-- Variable Expenses Table -->
-          <section class="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
-              <div class="bg-gray-50 px-4 py-3 border-b border-gray-200 flex justify-between items-center">
-                  <h3 class="font-bold text-gray-700 uppercase text-xs tracking-wider flex items-center gap-2">
+          <section class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-900 shadow-sm">
+              <div class="bg-gray-50 dark:bg-gray-800 px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                  <h3 class="font-bold text-gray-700 dark:text-gray-300 uppercase text-xs tracking-wider flex items-center gap-2">
                       <div class="w-2 h-2 bg-orange-500 rounded-full"></div>
                       Charges Variables (Estimées)
                   </h3>
-                  <span class="text-xs font-bold text-gray-500">{{ totalVariable() | currency:'CAD':'symbol-narrow':'1.0-0' }}</span>
+                  <span class="text-xs font-bold text-gray-500 dark:text-gray-400">{{ totalVariable() | currency:'CAD':'symbol-narrow':'1.0-0' }}</span>
               </div>
               
               <table class="w-full text-left border-collapse">
                   <thead>
-                      <tr class="text-[10px] text-gray-400 uppercase border-b border-gray-100">
+                      <tr class="text-[10px] text-gray-400 uppercase border-b border-gray-100 dark:border-gray-800">
                           <th class="px-4 py-2 font-medium w-1/2">Poste</th>
                           <th class="px-4 py-2 font-medium text-right">Montant</th>
                           <th class="px-4 py-2 font-medium text-right">% Rev.</th>
                           <th class="px-4 py-2 text-right w-10"></th>
                       </tr>
                   </thead>
-                  <tbody class="divide-y divide-gray-50">
+                  <tbody class="divide-y divide-gray-50 dark:divide-gray-800">
                       @for (item of variableExpenses(); track item.id) {
-                          <tr class="hover:bg-gray-50 group transition-colors">
-                              <td class="px-4 py-2 text-gray-700 font-medium">{{ item.label }}</td>
-                              <td class="px-4 py-2 text-right text-gray-900 font-bold">{{ item.amount | currency:'CAD':'':'1.2-2' }}</td>
+                          <tr class="hover:bg-gray-50 dark:hover:bg-gray-800 group transition-colors">
+                              <td class="px-4 py-2 text-gray-700 dark:text-gray-300 font-medium">{{ item.label }}</td>
+                              <td class="px-4 py-2 text-right text-gray-900 dark:text-white font-bold">{{ item.amount | currency:'CAD':'':'1.2-2' }}</td>
                               <td class="px-4 py-2 text-right text-gray-400 text-xs">{{ (salary() > 0 ? item.amount / salary() : 0) | percent:'1.1-1' }}</td>
                               <td class="px-4 py-2 text-right">
                                   <button (click)="removeItem('variable', item.id)" class="text-gray-300 hover:text-orange-500 transition-colors opacity-0 group-hover:opacity-100 px-2">×</button>
@@ -144,16 +145,16 @@ import { ToastService } from '../../../../shared/services/toast.service';
                           <tr><td colspan="4" class="px-4 py-6 text-center text-gray-300 italic text-xs">Aucune charge variable</td></tr>
                       }
                   </tbody>
-                   <tfoot class="bg-gray-50 border-t border-gray-200">
+                   <tfoot class="bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
                       <tr>
                           <td class="p-2">
-                              <input type="text" [(ngModel)]="newVariableLabel" (keyup.enter)="addItem('variable')" class="w-full bg-white border border-gray-300 rounded px-2 py-1 text-xs focus:ring-1 focus:ring-black focus:border-black" placeholder="Nouveau poste...">
+                              <input type="text" [(ngModel)]="newVariableLabel" (keyup.enter)="addItem('variable')" class="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-xs focus:ring-1 focus:ring-black dark:focus:ring-white focus:border-black dark:focus:border-white dark:text-white" placeholder="Nouveau poste...">
                           </td>
                           <td class="p-2">
-                              <input type="number" [(ngModel)]="newVariableAmount" (keyup.enter)="addItem('variable')" class="w-full bg-white border border-gray-300 rounded px-2 py-1 text-xs text-right font-bold focus:ring-1 focus:ring-black focus:border-black" placeholder="0.00">
+                              <input type="number" [(ngModel)]="newVariableAmount" (keyup.enter)="addItem('variable')" class="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-xs text-right font-bold focus:ring-1 focus:ring-black dark:focus:ring-white focus:border-black dark:focus:border-white dark:text-white" placeholder="0.00">
                           </td>
                           <td colspan="2" class="p-2 text-right">
-                              <button (click)="addItem('variable')" [disabled]="!newVariableLabel || !newVariableAmount" class="bg-black text-white px-3 py-1 rounded text-xs font-bold hover:bg-gray-800 disabled:opacity-50 transition-colors uppercase tracking-wide">Ajouter</button>
+                              <button (click)="addItem('variable')" [disabled]="!newVariableLabel || !newVariableAmount" class="bg-black dark:bg-white text-white dark:text-black px-3 py-1 rounded text-xs font-bold hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50 transition-colors uppercase tracking-wide">Ajouter</button>
                           </td>
                       </tr>
                   </tfoot>

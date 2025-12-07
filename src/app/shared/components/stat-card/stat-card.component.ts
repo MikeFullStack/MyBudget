@@ -1,29 +1,42 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslatePipe } from '../../pipes/translate.pipe';
 
 @Component({
   selector: 'app-stat-card',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   template: `
-    <div class="bg-white dark:bg-gray-900 p-6 rounded-3xl shadow-[0_2px_20px_rgba(0,0,0,0.02)] border border-white/50 dark:border-gray-800 relative overflow-hidden group hover:shadow-lg transition-all duration-300">
-      <div class="relative z-10">
-        <div class="flex items-center gap-2 mb-2">
-          <div 
-            class="w-8 h-8 rounded-full flex items-center justify-center"
-            [ngClass]="type === 'income' ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'"
-          >
-             <span class="text-lg">{{ type === 'income' ? '↓' : '↑' }}</span>
-          </div>
-          <span class="font-medium text-gray-500 dark:text-gray-400">{{ label || (type === 'income' ? 'Revenus' : 'Dépenses') }}</span>
+    <div class="p-6 rounded-2xl border shadow-sm transition-all duration-300 bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800">
+      <div class="flex items-start justify-between mb-4">
+        <div class="p-2.5 rounded-xl bg-gray-50 dark:bg-gray-800">
+           <span class="text-xl filter grayscale" [class.grayscale-0]="true">{{ type === 'income' ? '💰' : '💸' }}</span>
         </div>
-        <span class="text-2xl font-bold text-gray-900 dark:text-white">{{ amount | currency:'CAD':'symbol-narrow':'1.0-0' }}</span>
+        <span class="px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider"
+           [class.bg-green-100]="type === 'income'"
+           [class.text-green-700]="type === 'income'"
+           [class.dark:bg-green-900]="type === 'income'"
+           [class.dark:text-green-300]="type === 'income'"
+           [class.bg-red-100]="type === 'outcome'"
+           [class.text-red-700]="type === 'outcome'"
+           [class.dark:bg-red-900]="type === 'outcome'"
+           [class.dark:text-red-300]="type === 'outcome'"
+        >
+          {{ (type === 'income' ? 'dashboard.income' : 'dashboard.outcome') | translate }}
+        </span>
+      </div>
+      <div>
+        <h4 class="text-sm font-semibold text-gray-400 dark:text-gray-500 mb-1">
+            {{ (type === 'income' ? 'dashboard.total_income' : 'dashboard.total_outcome') | translate }}
+        </h4>
+        <div class="text-2xl font-black tracking-tight text-gray-900 dark:text-white">
+            {{ amount | currency:'CAD':'symbol-narrow':'1.2-2' }}
+        </div>
       </div>
     </div>
   `
 })
 export class StatCardComponent {
   @Input() type: 'income' | 'outcome' = 'income';
-  @Input() amount: number = 0;
-  @Input() label: string = '';
+  @Input() amount = 0;
 }

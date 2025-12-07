@@ -46,7 +46,7 @@ import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
 
       <!-- Scrollable List -->
       <div class="flex-1 overflow-y-auto px-4 py-2 space-y-1 scrollbar-hide">
-          <div *ngIf="budgets().length > 0" class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 px-1">Vos Budgets</div>
+          <div *ngIf="budgets().length > 0" class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 px-1">{{ 'sidebar.your_budgets' | translate }}</div>
           
           <button *ngFor="let budget of budgets()"
             (click)="selectBudget.emit(budget.id)"

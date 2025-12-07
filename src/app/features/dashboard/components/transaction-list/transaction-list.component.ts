@@ -1,16 +1,17 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Transaction } from '../../../../shared/models/budget.models';
+import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
 
 @Component({
   selector: 'app-transaction-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   template: `
     <div class="space-y-4">
-      <h3 class="text-lg font-bold text-gray-900 dark:text-white px-2">Historique</h3>
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white px-2">{{ 'list.history' | translate }}</h3>
       @if (transactions.length === 0) {
-          <div class="text-center py-10 opacity-50 text-gray-500 dark:text-gray-400">Aucune transaction</div>
+          <div class="text-center py-10 opacity-50 text-gray-500 dark:text-gray-400">{{ 'list.no_transactions' | translate }}</div>
       } @else {
         <div class="bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
           @for (tx of transactions; track tx.id) {

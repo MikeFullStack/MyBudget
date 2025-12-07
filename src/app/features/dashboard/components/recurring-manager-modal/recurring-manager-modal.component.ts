@@ -1,25 +1,26 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RecurringTransaction } from '../../../../shared/models/budget.models';
+import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
 
 @Component({
     selector: 'app-recurring-manager-modal',
     standalone: true,
-    imports: [CommonModule],
+    imports: [CommonModule, TranslatePipe],
     template: `
     <div class="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
       <div class="bg-white dark:bg-gray-900 rounded-3xl p-6 w-full max-w-md shadow-2xl relative animate-scale-in transition-colors duration-300">
         <div class="flex justify-between items-center mb-6">
-             <h3 class="text-xl font-bold text-gray-900 dark:text-white">Abonnements & Récurrents</h3>
+             <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{ 'recurring.title' | translate }}</h3>
              <button (click)="close.emit()" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                 <span class="text-xl">✕</span>
+                 <span class="text-xl dark:text-white">✕</span>
              </button>
         </div>
 
         @if (recurringItems.length === 0) {
             <div class="text-center py-12 text-gray-400 dark:text-gray-500">
-                <p>Aucune transaction récurrente active.</p>
-                <p class="text-xs mt-2">Cochez "Répéter" lors de l'ajout d'une transaction.</p>
+                <p>{{ 'recurring.empty' | translate }}</p>
+                <p class="text-xs mt-2">{{ 'recurring.empty_hint' | translate }}</p>
             </div>
         } @else {
             <div class="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
@@ -28,9 +29,9 @@ import { RecurringTransaction } from '../../../../shared/models/budget.models';
                         <div>
                             <div class="font-bold text-gray-900 dark:text-white">{{ item.label }}</div>
                             <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 flex items-center gap-2">
-                                <span class="capitalize">{{ item.frequency === 'weekly' ? 'Hebdomadaire' : item.frequency === 'monthly' ? 'Mensuel' : 'Annuel' }}</span>
+                                <span class="capitalize">{{ (item.frequency === 'weekly' ? 'common.weekly' : item.frequency === 'monthly' ? 'common.monthly' : 'common.yearly') | translate }}</span>
                                 <span>•</span>
-                                <span>Prochaine: {{ item.nextDueDate | date:'dd MMM' }}</span>
+                                <span>{{ 'common.next' | translate }} {{ item.nextDueDate | date:'dd MMM' }}</span>
                             </div>
                         </div>
                         <div class="flex items-center gap-4">
