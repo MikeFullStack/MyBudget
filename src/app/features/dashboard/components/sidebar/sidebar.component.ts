@@ -176,7 +176,24 @@ export class SidebarComponent {
   }
 
   toggleLang() {
-    this.langService.toggle();
+    // 1. Check support
+    if (!(document as any).startViewTransition) {
+      this.langService.toggle();
+      return;
+    }
+
+    // 2. Set Transition Type
+    document.documentElement.dataset['transition'] = 'lang';
+
+    // 3. Start
+    const transition = (document as any).startViewTransition(() => {
+      this.langService.toggle();
+    });
+
+    // 4. Cleanup
+    transition.finished.then(() => {
+      delete document.documentElement.dataset['transition'];
+    });
   }
 
   requestDelete(id: string) {

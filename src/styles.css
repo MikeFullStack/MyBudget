@@ -36,6 +36,29 @@ body {
 /* View Transitions API Support */
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation: none;
-  mix-blend-mode: normal;
+    animation: none;
+    mix-blend-mode: normal;
+}
+
+/* Language Transition: Fly Off */
+@keyframes scaleOut {
+    to {
+        transform: scale(0.9) translateY(-100vh);
+        opacity: 0;
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0.9) translateY(100vh);
+        opacity: 0;
+    }
+}
+
+html[data-transition="lang"]::view-transition-old(root) {
+    animation: scaleOut 0.5s cubic-bezier(0.87, 0, 0.13, 1) forwards;
+}
+
+html[data-transition="lang"]::view-transition-new(root) {
+    animation: scaleIn 0.5s cubic-bezier(0.87, 0, 0.13, 1) forwards;
 }
