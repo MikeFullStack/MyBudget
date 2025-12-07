@@ -32,3 +32,10 @@ body {
 ::-webkit-scrollbar-thumb:hover {
     background: #9ca3af;
 }
+
+/* View Transitions API Support */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}

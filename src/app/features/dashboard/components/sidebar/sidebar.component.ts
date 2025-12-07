@@ -84,7 +84,7 @@ import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
       <div class="p-4 border-t border-gray-800/50 space-y-2">
          <!-- Settings / Toggles -->
          <div class="flex gap-2">
-            <button (click)="toggleTheme()" class="flex-1 py-2 bg-gray-800/50 rounded-lg hover:bg-gray-700 transition-colors text-lg flex items-center justify-center border border-gray-700/50">
+            <button (click)="toggleTheme($event)" class="flex-1 py-2 bg-gray-800/50 rounded-lg hover:bg-gray-700 transition-colors text-lg flex items-center justify-center border border-gray-700/50">
                 {{ isDark() ? '☀️' : '🌙' }}
             </button>
             <button (click)="toggleLang()" class="flex-1 py-2 bg-gray-800/50 rounded-lg hover:bg-gray-700 transition-colors text-lg flex items-center justify-center border border-gray-700/50 font-bold text-xs uppercase text-gray-300">
@@ -132,8 +132,47 @@ export class SidebarComponent {
     });
   }
 
-  toggleTheme() {
-    this.themeService.toggle();
+  toggleTheme(event?: MouseEvent) {
+    // 1. Check if View Transitions API is supported
+    if (!(document as any).startViewTransition || !event) {
+      this.themeService.toggle();
+      return;
+    }
+
+    // 2. Get click coordinates
+    const x = event.clientX;
+    const y = event.clientY;
+
+    // 3. Calculate distance to furthest corner
+    const endRadius = Math.hypot(
+      Math.max(x, innerWidth - x),
+      Math.max(y, innerHeight - y)
+    );
+
+    // 4. Start Transition using global document (cast to any for TS check)
+    const transition = (document as any).startViewTransition(() => {
+      this.themeService.toggle();
+    });
+
+    // 5. Animate Clip Path
+    transition.ready.then(() => {
+      const clipPath = [
+        `circle(0px at ${x}px ${y}px)`,
+        `circle(${endRadius}px at ${x}px ${y}px)`
+      ];
+
+      // We always expand the NEW view
+      document.documentElement.animate(
+        {
+          clipPath: clipPath
+        },
+        {
+          duration: 500,
+          easing: 'ease-out',
+          pseudoElement: '::view-transition-new(root)',
+        }
+      );
+    });
   }
 
   toggleLang() {
