@@ -224,4 +224,23 @@ describe('DashboardComponent Integration', () => {
             {} // Empty extra data
         );
     });
+
+    // --- 8. Skeleton Loading ---
+    it('should show skeleton when loading', () => {
+        // Toggle loading
+        mockBudgetService.isLoading.set(true);
+        fixture.detectChanges();
+
+        const skeleton = fixture.debugElement.query(By.css('app-skeleton'));
+        expect(skeleton).toBeTruthy();
+
+        // Turn off
+        mockBudgetService.isLoading.set(false);
+        fixture.detectChanges();
+
+        // Should show content again (e.g. balance or empty state)
+        const skeletonAfter = fixture.debugElement.query(By.css('app-skeleton'));
+        expect(skeletonAfter).toBeFalsy();
+    });
 });
+

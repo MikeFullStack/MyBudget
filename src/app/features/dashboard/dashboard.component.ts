@@ -21,6 +21,7 @@ import { RecurringManagerModalComponent } from './components/recurring-manager-m
 import { BudgetWizardComponent } from './components/budget-wizard/budget-wizard.component';
 import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 import { LanguageService } from '../../core/services/language.service';
+import { SkeletonComponent } from '../../shared/components/skeleton/skeleton.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -41,7 +42,8 @@ import { LanguageService } from '../../core/services/language.service';
     RecurringManagerModalComponent,
     RecurringManagerModalComponent,
     TranslatePipe,
-    BudgetWizardComponent
+    BudgetWizardComponent,
+    SkeletonComponent
   ],
   template: `
     <div class="h-screen flex flex-col md:flex-row overflow-hidden bg-[#F5F5F7] dark:bg-[#000000] text-[#1D1D1F] dark:text-gray-100 font-sans transition-colors duration-300">
@@ -58,6 +60,37 @@ import { LanguageService } from '../../core/services/language.service';
       ></app-sidebar>
 
       <main class="flex-1 relative overflow-y-auto h-screen bg-[#F5F5F7] dark:bg-[#000000]">
+        
+        <!-- Loading State (Skeleton) -->
+        @if (isLoading()) {
+            <div class="max-w-5xl mx-auto p-4 md:p-10 space-y-8 animate-pulse">
+                <!-- Header Skeleton -->
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-8">
+                    <div class="space-y-3">
+                        <app-skeleton width="250px" height="40px"></app-skeleton>
+                        <app-skeleton width="180px" height="20px"></app-skeleton>
+                    </div>
+                    <app-skeleton width="240px" height="90px" borderRadius="1rem" className="hidden md:block"></app-skeleton>
+                </div>
+
+                <!-- Stats Skeleton -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <app-skeleton height="140px" borderRadius="1.5rem"></app-skeleton>
+                    <app-skeleton height="140px" borderRadius="1.5rem"></app-skeleton>
+                </div>
+
+                <!-- List Skeleton -->
+                <div class="space-y-4 mt-8">
+                    <app-skeleton width="150px" height="24px"></app-skeleton>
+                    <div class="space-y-3">
+                         <app-skeleton height="70px" borderRadius="1rem"></app-skeleton>
+                         <app-skeleton height="70px" borderRadius="1rem"></app-skeleton>
+                         <app-skeleton height="70px" borderRadius="1rem"></app-skeleton>
+                    </div>
+                </div>
+            </div>
+        }
+
         <!-- Empty State -->
         @if (!currentBudget() && !isLoading() && budgets().length === 0) {
            <div class="h-full flex flex-col items-center justify-center text-gray-400 p-8 animate-fade-in-up">
