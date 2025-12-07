@@ -305,6 +305,43 @@ export class BudgetService {
             };
             await this.addRecurringTransaction(walletId, recurring);
 
+            await this.addRecurringTransaction(walletId, recurring);
+
+            // ---------------------------------------------------------
+            // 5. Create Monthly Budget (Planner)
+            // ---------------------------------------------------------
+            const monthlyId = await this.createBudget('Plan Mensuel', 'purple', '📅', 'monthly', {
+                monthlyData: {
+                    salary: 4200,
+                    fixedExpenses: [
+                        { id: crypto.randomUUID(), label: 'Loyer', amount: 1350 },
+                        { id: crypto.randomUUID(), label: 'Internet + Tel', amount: 65 },
+                        { id: crypto.randomUUID(), label: 'Électricité', amount: 90 },
+                        { id: crypto.randomUUID(), label: 'Assurance Auto', amount: 45 }
+                    ],
+                    variableExpenses: [
+                        { id: crypto.randomUUID(), label: 'Courses', amount: 400 },
+                        { id: crypto.randomUUID(), label: 'Sorties', amount: 200 },
+                        { id: crypto.randomUUID(), label: 'Essence', amount: 150 }
+                    ]
+                }
+            });
+
+            if (monthlyId) {
+                // Add matching transactions to visualize progress
+                const mTransactions: Transaction[] = [
+                    { id: crypto.randomUUID(), label: 'Salaire', amount: 4200, type: 'income', dateStr: today, category: 'Salaire' },
+                    { id: crypto.randomUUID(), label: 'Loyer Décembre', amount: 1350, type: 'outcome', dateStr: today, category: 'Logement' },
+                    { id: crypto.randomUUID(), label: 'Orange', amount: 65, type: 'outcome', dateStr: yesterday, category: 'Factures' },
+                    { id: crypto.randomUUID(), label: 'Carrefour', amount: 124.50, type: 'outcome', dateStr: yesterday, category: 'Alimentation' },
+                    { id: crypto.randomUUID(), label: 'Cinema', amount: 24, type: 'outcome', dateStr: yesterday, category: 'Loisirs' },
+                    { id: crypto.randomUUID(), label: 'Bar', amount: 45, type: 'outcome', dateStr: yesterday, category: 'Loisirs' }
+                ];
+
+                const mRef = doc(this.db, 'artifacts', 'mon-budget', 'users', user.uid, 'budgets', monthlyId);
+                await updateDoc(mRef, { transactions: mTransactions });
+            }
+
         } catch (err) {
             console.error('Seeding failed', err);
             throw err;
