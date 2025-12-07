@@ -47,4 +47,6 @@ export interface Budget {
     };
     goals?: SavingsGoal[];
     recurring?: RecurringTransaction[];
+    ownerId?: string;
+    participants?: string[];
 }

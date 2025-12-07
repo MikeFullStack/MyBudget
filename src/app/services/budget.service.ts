@@ -10,7 +10,10 @@ import {
     updateDoc,
     runTransaction,
     arrayUnion,
-    arrayRemove
+    arrayRemove,
+    collectionGroup,
+    where,
+    or
 } from 'firebase/firestore';
 import { db, firebaseConfig } from '../core/firebase-init';
 import { Budget, Transaction } from '../shared/models/budget.models';
@@ -42,26 +45,81 @@ export class BudgetService {
             }
 
             this.isLoading.set(true);
-            this.logger.phase('DONNÉES', 'Synchronisation avec le cloud...');
-            const appId = 'mon-budget';
-            const q = query(collection(this.db, 'artifacts', appId, 'users', user.uid, 'budgets'));
+            this.logger.phase('DONNÉES', 'Synchronisation avec le cloud (Partagé)...');
 
-            const unsubscribe = onSnapshot(q, {
-                next: (snapshot) => {
-                    const data = snapshot.docs.map(d => d.data() as Budget);
-                    this.budgets.set(data);
-                    this.isLoading.set(false);
-                    this.logger.success(`${data.length} budgets chargés.`);
-                    // Check for recurring transactions
-                    this.processRecurringTransactions(data);
-                },
-                error: (err) => {
-                    this.logger.error('Échec du chargement des données', err);
-                    this.isLoading.set(false);
-                }
+            // Query 1: My Budgets (Nested)
+            // const qOwned = query(collection(this.db, 'artifacts', 'mon-budget', 'users', user.uid, 'budgets'));
+
+            // BETTER APPROACH: Use Collection Group to find *any* budget where I am owner OR participant
+            // This requires that all budgets have 'ownerId' set correctly.
+            // Since we are migrating, old budgets might default (handle that?).
+
+            // To make it simple and working with current structure + sharing:
+            // We'll listen to the specific paths if we knew them, but here we want discovery.
+
+            // Strategy:
+            // 1. Listen to my own budgets (fast, direct).
+            // 2. Listen to budgets where I am a participant (Collection Group).
+            // But Collection Group listeners can be expensive? No, it's fine.
+
+            // Actually, if we use Collection Group for everything, we need unique IDs across the system.
+            // Firestore IDs are usually unique enough.
+
+            const budgetsRef = collectionGroup(this.db, 'budgets');
+
+            // Complex OR query might require index.
+            // Let's rely on 2 listeners and merge? Or just one simple logic?
+            // "ownerId == uid" OR "participants array-contains email"
+
+            // Note: OR queries in Firestore have limitations.
+            // Let's try to query where participants contains my email.
+            // AND query my own path.
+
+            // Wait, collectionGroup 'budgets' includes my nested budgets too!
+            // So if I query collectionGroup('budgets') where ownerId == uid, I get mine.
+            // If I query collectionGroup('budgets') where participants contains email, I get shared.
+            // I can combine them with `or(...)` if I have the index.
+
+            // For now, let's implement the `or` query.
+            // We need to import `collectionGroup` and `or`, `where`.
+
+            import('firebase/firestore').then(({ collectionGroup, where, or, onSnapshot }) => {
+                const q = query(
+                    collectionGroup(this.db, 'budgets'),
+                    or(
+                        where('ownerId', '==', user.uid),
+                        where('participants', 'array-contains', user.email)
+                    )
+                );
+
+                const unsubscribe = onSnapshot(q, {
+                    next: (snapshot) => {
+                        const data = snapshot.docs.map(d => {
+                            const b = d.data() as Budget;
+                            b.id = d.id; // Ensure ID is correct
+                            // Inject path for updates? Not needed if we use ID and assume structure?
+                            // Actually updates need to know the path (ownerId).
+                            // So we should store the 'ref.path' or similar if we want to update shared budgets.
+                            return b;
+                        });
+
+                        // We need a way to know the *path* to update shared budgets later.
+                        // Let's store a hidden metadata map of ID -> Path?
+                        // Or just store ownerId in the Budget object (we added it).
+                        // If we know ownerId, we know the path: users/{ownerId}/budgets/{budgetId}.
+
+                        this.budgets.set(data);
+                        this.isLoading.set(false);
+                        this.processRecurringTransactions(data);
+                    },
+                    error: (err) => {
+                        console.error('Snapshot Error', err);
+                        // Fallback to local only query if index missing?
+                        this.isLoading.set(false);
+                    }
+                });
+                onCleanup(() => unsubscribe());
             });
-
-            onCleanup(() => unsubscribe());
         });
     }
 
@@ -76,6 +134,8 @@ export class BudgetService {
             const newBudget: Omit<Budget, 'id'> & { id: string } = {
                 id: budgetRef.id,
                 name,
+                ownerId: user.uid,
+                participants: [],
                 themeColor,
                 icon,
                 transactions: [],
@@ -93,6 +153,38 @@ export class BudgetService {
             console.error('Error creating budget:', err);
             throw err;
         }
+    }
+
+    async inviteUserToBudget(budgetId: string, email: string) {
+        // Warning: This updates the local path, but if the budget is SHARED (not owned), we need the correct path.
+        // For now, we assume we are the owner or have the path in state if we want to invite.
+        // BUT, if we loaded via CollectionGroup, we might not have the full path easily unless we stored it.
+        // Simplified: We assume we own it for now or query lookup.
+
+        // Robust way: Query to find the doc path then update.
+        // Since we are using Collection Group for read, write is harder without path.
+        // Workaround: We will search for the budget in our loaded list, which hopefully has data.
+        // If we are the owner, it is in 'users/me/budgets'.
+
+        const user = this.authService.currentUser();
+        if (!user) return;
+
+        const budget = this.budgets().find(b => b.id === budgetId);
+        if (!budget) throw new Error('Budget not found');
+
+        // If I am owner:
+        let ref;
+        if (budget.ownerId === user.uid) {
+            ref = doc(this.db, 'artifacts', 'mon-budget', 'users', user.uid, 'budgets', budgetId);
+        } else {
+            // I am a participant inviting someone else? 
+            // Logic: Only owner can invite for now.
+            throw new Error('Only the owner can invite users');
+        }
+
+        await updateDoc(ref, {
+            participants: arrayUnion(email)
+        });
     }
 
     async updateBudget(budgetId: string, data: Partial<Budget>) {

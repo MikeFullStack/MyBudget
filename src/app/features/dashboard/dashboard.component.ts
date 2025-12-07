@@ -24,6 +24,7 @@ import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 import { LanguageService } from '../../core/services/language.service';
 import { SkeletonComponent } from '../../shared/components/skeleton/skeleton.component';
 import { AiAdvisorModalComponent } from './components/ai-advisor-modal/ai-advisor-modal.component';
+import { ShareModalComponent } from './components/share-modal/share-modal.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -46,7 +47,8 @@ import { AiAdvisorModalComponent } from './components/ai-advisor-modal/ai-adviso
     BudgetWizardComponent,
     TranslatePipe,
     SkeletonComponent,
-    AiAdvisorModalComponent
+    AiAdvisorModalComponent,
+    ShareModalComponent
   ],
   template: `
     <div class="h-screen flex flex-col md:flex-row overflow-hidden bg-[#F5F5F7] dark:bg-[#000000] text-[#1D1D1F] dark:text-gray-100 font-sans transition-colors duration-300">
@@ -125,6 +127,9 @@ import { AiAdvisorModalComponent } from './components/ai-advisor-modal/ai-adviso
                             <h2 class="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">{{ budget.name }}</h2>
                             <button (click)="showAiAdvisor.set(true)" class="p-2 bg-gradient-to-tr from-blue-500 to-purple-600 rounded-full text-white shadow-md hover:scale-110 transition-transform" title="Conseiller AI">
                                 ✨
+                            </button>
+                            <button (click)="showShareModal.set(true)" class="p-2 bg-gray-200 dark:bg-gray-700 rounded-full text-gray-700 dark:text-white shadow-md hover:scale-110 transition-transform" title="Partager">
+                                📤
                             </button>
                         </div>
                         <p class="text-gray-500 dark:text-gray-400 mt-1">{{ 'dashboard.financial_overview' | translate }}</p>
@@ -296,6 +301,14 @@ import { AiAdvisorModalComponent } from './components/ai-advisor-modal/ai-adviso
         ></app-ai-advisor-modal>
       }
 
+      @if (showShareModal()) {
+        <app-share-modal
+            [budgetId]="selectedBudgetId()"
+            [participants]="currentBudget()?.participants || []"
+            (close)="showShareModal.set(false)"
+        ></app-share-modal>
+      }
+
     </div>
   `
 })
@@ -319,6 +332,7 @@ export class DashboardComponent {
 
   // AI Advisor
   showAiAdvisor = signal(false);
+  showShareModal = signal(false);
 
   aiContext = computed(() => {
     return {

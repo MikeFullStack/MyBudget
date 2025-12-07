@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { DashboardComponent } from './dashboard.component';
+import { ShareModalComponent } from './components/share-modal/share-modal.component';
 import { BudgetService } from '../../services/budget.service';
 import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../shared/services/toast.service';
@@ -33,7 +34,8 @@ const mockBudgetService = {
     updateGoal: vi.fn().mockResolvedValue(true),
     deleteGoal: vi.fn().mockResolvedValue(true),
     addRecurringTransaction: vi.fn().mockResolvedValue(true),
-    deleteRecurringTransaction: vi.fn().mockResolvedValue(true)
+    deleteRecurringTransaction: vi.fn().mockResolvedValue(true),
+    inviteUserToBudget: vi.fn().mockResolvedValue(true)
 };
 
 const mockToastService = {
@@ -90,7 +92,7 @@ describe('DashboardComponent Integration', () => {
         })
             .overrideComponent(DashboardComponent, {
                 remove: { imports: [TranslatePipe] },
-                add: { imports: [MockTranslatePipe] }
+                add: { imports: [MockTranslatePipe, ShareModalComponent] }
             })
             .compileComponents();
 
@@ -261,5 +263,28 @@ describe('DashboardComponent Integration', () => {
                 'success'
             );
         });
+    });
+
+
+    // --- 10. Shared Budgets ---
+    it('should open share modal and invite user', async () => {
+        const goal = { id: 'g1', name: 'Trip', targetAmount: 1000, currentAmount: 500, icon: '✈️', color: 'blue' };
+        mockBudgetService.budgets.set([{ id: 'b1', name: 'B1', ownerId: 'uid1', type: 'wallet', transactions: [], goals: [], recurring: [] } as any]);
+        component.selectedBudgetId.set('b1');
+        fixture.detectChanges();
+
+        // Open Modal
+        component.showShareModal.set(true);
+        fixture.detectChanges();
+
+        const modal = fixture.debugElement.query(By.css('app-share-modal'));
+        expect(modal).toBeTruthy();
+
+        // Simulate invitation
+        const shareComponent = modal.componentInstance as ShareModalComponent;
+        shareComponent.email = 'invite@test.com';
+        await shareComponent.invite();
+
+        expect(mockBudgetService.inviteUserToBudget).toHaveBeenCalledWith('b1', 'invite@test.com');
     });
 });
