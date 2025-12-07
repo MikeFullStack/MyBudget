@@ -2,6 +2,8 @@ import { Component, EventEmitter, Input, Output, signal, inject, ElementRef, Vie
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AiService } from '../../../../core/services/ai.service';
+import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
+import { LanguageService } from '../../../../core/services/language.service';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -12,7 +14,7 @@ interface ChatMessage {
 @Component({
   selector: 'app-ai-advisor-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslatePipe],
   template: `
     <div class="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in bg-black/20 backdrop-blur-sm">
       <!-- Main Card: Glassmorphism & Apple-style Rounded Corners -->
@@ -27,10 +29,10 @@ interface ChatMessage {
            
            <!-- Title Centered -->
            <div class="text-center">
-              <h2 class="text-[15px] font-semibold text-gray-900 dark:text-white">Conseiller Budget</h2>
+              <h2 class="text-[15px] font-semibold text-gray-900 dark:text-white">{{ 'ai.title' | translate }}</h2>
               <div class="flex items-center justify-center gap-1.5 opacity-60">
                 <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                <span class="text-[10px] text-gray-500 dark:text-gray-400 font-medium tracking-wide uppercase">Gemini 2.0</span>
+                <span class="text-[10px] text-gray-500 dark:text-gray-400 font-medium tracking-wide uppercase">{{ 'ai.subtitle' | translate }}</span>
               </div>
            </div>
            
@@ -44,7 +46,7 @@ interface ChatMessage {
             <!-- Disclaimer -->
             <div class="text-center py-4">
                 <span class="px-3 py-1 rounded-full bg-gray-100 dark:bg-[#2C2C2E] text-[10px] text-gray-500 border border-gray-200 dark:border-gray-700">
-                    L'IA peut faire des erreurs. Vérifiez vos données.
+                    {{ 'ai.disclaimer' | translate }}
                 </span>
             </div>
 
@@ -107,7 +109,7 @@ interface ChatMessage {
                     type="text" 
                     [(ngModel)]="userInput" 
                     (keydown.enter)="sendMessage()"
-                    placeholder="Message..." 
+                    [placeholder]="'ai.placeholder' | translate" 
                     class="w-full bg-gray-100 dark:bg-[#2C2C2E] text-gray-900 dark:text-white rounded-full py-3.5 pl-5 pr-12 focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 placeholder-gray-500 dark:placeholder-gray-400 text-[15px] transition-all"
                     [disabled]="isLoading()"
                 >
@@ -133,6 +135,7 @@ export class AiAdvisorModalComponent implements AfterViewChecked {
   @ViewChild('scrollContainer') private scrollContainer!: ElementRef;
 
   private aiService = inject(AiService);
+  private langService = inject(LanguageService); // Inject LanguageService
 
   isLoading = signal(true);
   error = signal<string | null>(null);
@@ -172,7 +175,7 @@ export class AiAdvisorModalComponent implements AfterViewChecked {
 
     } catch (err: any) {
       console.error(err);
-      this.error.set(err.message || 'Problème de connexion avec le cerveau AI.');
+      this.error.set(this.langService.translate('ai.error_connection'));
     } finally {
       this.isLoading.set(false);
     }
@@ -196,7 +199,7 @@ export class AiAdvisorModalComponent implements AfterViewChecked {
 
       this.messages.update(msgs => [...msgs, { role: 'assistant', content: response, isMarkdown: false }]);
     } catch (err: any) {
-      this.error.set('Impossible de répondre à cette question.');
+      this.error.set(this.langService.translate('ai.error_response'));
     } finally {
       this.isLoading.set(false);
     }

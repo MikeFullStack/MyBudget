@@ -47,78 +47,52 @@ export class BudgetService {
             this.isLoading.set(true);
             this.logger.phase('DONNÉES', 'Synchronisation avec le cloud (Partagé)...');
 
-            // Query 1: My Budgets (Nested)
-            // const qOwned = query(collection(this.db, 'artifacts', 'mon-budget', 'users', user.uid, 'budgets'));
+            // Strategy: Hybrid Listener
+            // 1. Listen to OWN budgets directly (latency compensated, fast, reliable)
+            // 2. Listen to SHARED budgets via Collection Group (for discovery)
 
-            // BETTER APPROACH: Use Collection Group to find *any* budget where I am owner OR participant
-            // This requires that all budgets have 'ownerId' set correctly.
-            // Since we are migrating, old budgets might default (handle that?).
+            let ownedBudgets: Budget[] = [];
+            let sharedBudgets: Budget[] = [];
 
-            // To make it simple and working with current structure + sharing:
-            // We'll listen to the specific paths if we knew them, but here we want discovery.
+            const updateState = () => {
+                const map = new Map<string, Budget>();
+                ownedBudgets.forEach(b => map.set(b.id, b));
+                sharedBudgets.forEach(b => map.set(b.id, b));
 
-            // Strategy:
-            // 1. Listen to my own budgets (fast, direct).
-            // 2. Listen to budgets where I am a participant (Collection Group).
-            // But Collection Group listeners can be expensive? No, it's fine.
+                const combined = Array.from(map.values());
+                this.budgets.set(combined);
+                this.isLoading.set(false);
+            };
 
-            // Actually, if we use Collection Group for everything, we need unique IDs across the system.
-            // Firestore IDs are usually unique enough.
+            // 1. Owned Budgets Listener
+            const ownedRef = collection(this.db, 'artifacts', 'mon-budget', 'users', user.uid, 'budgets');
+            const unsubOwned = onSnapshot(ownedRef, (snap) => {
+                ownedBudgets = snap.docs.map(d => ({ ...d.data(), id: d.id } as Budget));
+                updateState();
+            }, (err) => {
+                console.error('Owned budgets listener error', err);
+                this.isLoading.set(false);
+            });
 
-            const budgetsRef = collectionGroup(this.db, 'budgets');
-
-            // Complex OR query might require index.
-            // Let's rely on 2 listeners and merge? Or just one simple logic?
-            // "ownerId == uid" OR "participants array-contains email"
-
-            // Note: OR queries in Firestore have limitations.
-            // Let's try to query where participants contains my email.
-            // AND query my own path.
-
-            // Wait, collectionGroup 'budgets' includes my nested budgets too!
-            // So if I query collectionGroup('budgets') where ownerId == uid, I get mine.
-            // If I query collectionGroup('budgets') where participants contains email, I get shared.
-            // I can combine them with `or(...)` if I have the index.
-
-            // For now, let's implement the `or` query.
-            // We need to import `collectionGroup` and `or`, `where`.
-
-            import('firebase/firestore').then(({ collectionGroup, where, or, onSnapshot }) => {
-                const q = query(
+            // 2. Shared Budgets Listener
+            import('firebase/firestore').then(({ collectionGroup, where, onSnapshot }) => {
+                const sharedQuery = query(
                     collectionGroup(this.db, 'budgets'),
-                    or(
-                        where('ownerId', '==', user.uid),
-                        where('participants', 'array-contains', user.email)
-                    )
+                    where('participants', 'array-contains', user.email)
                 );
 
-                const unsubscribe = onSnapshot(q, {
-                    next: (snapshot) => {
-                        const data = snapshot.docs.map(d => {
-                            const b = d.data() as Budget;
-                            b.id = d.id; // Ensure ID is correct
-                            // Inject path for updates? Not needed if we use ID and assume structure?
-                            // Actually updates need to know the path (ownerId).
-                            // So we should store the 'ref.path' or similar if we want to update shared budgets.
-                            return b;
-                        });
-
-                        // We need a way to know the *path* to update shared budgets later.
-                        // Let's store a hidden metadata map of ID -> Path?
-                        // Or just store ownerId in the Budget object (we added it).
-                        // If we know ownerId, we know the path: users/{ownerId}/budgets/{budgetId}.
-
-                        this.budgets.set(data);
-                        this.isLoading.set(false);
-                        this.processRecurringTransactions(data);
-                    },
-                    error: (err) => {
-                        console.error('Snapshot Error', err);
-                        // Fallback to local only query if index missing?
-                        this.isLoading.set(false);
-                    }
+                const unsubShared = onSnapshot(sharedQuery, (snap) => {
+                    sharedBudgets = snap.docs.map(d => ({ ...d.data(), id: d.id } as Budget));
+                    updateState();
+                }, (err) => {
+                    console.error('Shared budgets listener error', err);
+                    // Don't stop loading here, owned might have worked
                 });
-                onCleanup(() => unsubscribe());
+
+                onCleanup(() => {
+                    unsubOwned();
+                    unsubShared();
+                });
             });
         });
     }

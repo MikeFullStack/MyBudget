@@ -125,10 +125,10 @@ import { ShareModalComponent } from './components/share-modal/share-modal.compon
                     <div>
                         <div class="flex items-center gap-3">
                             <h2 class="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">{{ budget.name }}</h2>
-                            <button (click)="showAiAdvisor.set(true)" class="p-2 bg-gradient-to-tr from-blue-500 to-purple-600 rounded-full text-white shadow-md hover:scale-110 transition-transform" title="Conseiller AI">
+                            <button (click)="showAiAdvisor.set(true)" class="p-2 bg-gradient-to-tr from-blue-500 to-purple-600 rounded-full text-white shadow-md hover:scale-110 transition-transform" [title]="'dashboard.ai_advisor' | translate">
                                 ✨
                             </button>
-                            <button (click)="showShareModal.set(true)" class="p-2 bg-gray-200 dark:bg-gray-700 rounded-full text-gray-700 dark:text-white shadow-md hover:scale-110 transition-transform" title="Partager">
+                            <button (click)="showShareModal.set(true)" class="p-2 bg-gray-200 dark:bg-gray-700 rounded-full text-gray-700 dark:text-white shadow-md hover:scale-110 transition-transform" [title]="'dashboard.share' | translate">
                                 📤
                             </button>
                         </div>
@@ -225,8 +225,8 @@ import { ShareModalComponent } from './components/share-modal/share-modal.compon
                         <!-- Analysis Type Toggle -->
                         <div class="flex justify-center mb-6">
                             <div class="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
-                                <button (click)="analyticsMode.set('distribution')" [class.bg-white]="analyticsMode() === 'distribution'" [class.shadow-sm]="analyticsMode() === 'distribution'" class="px-4 py-1.5 rounded-md text-xs font-bold transition-all text-gray-500" [class.text-black]="analyticsMode() === 'distribution'">Répartition</button>
-                                <button (click)="analyticsMode.set('trend')" [class.bg-white]="analyticsMode() === 'trend'" [class.shadow-sm]="analyticsMode() === 'trend'" class="px-4 py-1.5 rounded-md text-xs font-bold transition-all text-gray-500" [class.text-black]="analyticsMode() === 'trend'">Tendance 6 M</button>
+                                <button (click)="analyticsMode.set('distribution')" [class.bg-white]="analyticsMode() === 'distribution'" [class.shadow-sm]="analyticsMode() === 'distribution'" class="px-4 py-1.5 rounded-md text-xs font-bold transition-all text-gray-500" [class.text-black]="analyticsMode() === 'distribution'">{{ 'analytics.distribution_label' | translate }}</button>
+                                <button (click)="analyticsMode.set('trend')" [class.bg-white]="analyticsMode() === 'trend'" [class.shadow-sm]="analyticsMode() === 'trend'" class="px-4 py-1.5 rounded-md text-xs font-bold transition-all text-gray-500" [class.text-black]="analyticsMode() === 'trend'">{{ 'analytics.trend_label' | translate }}</button>
                             </div>
                         </div>
 
@@ -636,6 +636,9 @@ export class DashboardComponent {
             origin: { y: 0.6 },
             colors: ['#FFD700', '#FFA500', '#FF4500'] // Gold theme
           });
+          this.toast.show(`Félicitations ! Objectif "${goal.name}" atteint ! 🏆`, 'success');
+        }).catch(err => {
+          console.warn('Confetti failed to load', err);
           this.toast.show(`Félicitations ! Objectif "${goal.name}" atteint ! 🏆`, 'success');
         });
       }
