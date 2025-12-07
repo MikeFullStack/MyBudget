@@ -5,19 +5,20 @@ import { AuthService } from '../../../../services/auth.service';
 import { ThemeService } from '../../../../core/services/theme.service';
 import { LanguageService } from '../../../../core/services/language.service';
 import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
+import { TextScrambleDirective } from '../../../../shared/directives/text-scramble.directive';
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [CommonModule, TranslatePipe, TextScrambleDirective],
   template: `
     <aside class="w-64 bg-[#0F172A] text-white flex flex-col h-full shadow-2xl transition-all duration-300 z-20">
       
       <!-- Header -->
       <div class="p-6 flex items-center justify-between border-b border-gray-800/50">
         <div>
-           <h1 class="text-2xl font-black bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent tracking-tight">
-             {{ 'app.title' | translate }}
+           <h1 class="text-2xl font-black bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent tracking-tight"
+               [appScramble]="'app.title' | translate">
            </h1>
            <div class="flex items-center gap-2 mt-1">
              <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
@@ -33,20 +34,21 @@ import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
           class="w-full py-3 px-4 bg-white text-black rounded-xl font-bold shadow-lg hover:shadow-white/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 group"
         >
           <span class="text-lg group-hover:rotate-90 transition-transform">＋</span>
-          {{ 'sidebar.new_budget' | translate }}
+          <span [appScramble]="'sidebar.new_budget' | translate"></span>
         </button>
 
         <button 
           (click)="calculator.emit()"
           class="w-full py-3 px-4 bg-gray-800/50 text-gray-300 rounded-xl font-semibold hover:bg-gray-800 border border-gray-700/50 hover:border-gray-600 transition-all flex items-center justify-center gap-2"
         >
-          <span>🧮</span> {{ 'sidebar.calculator' | translate }}
+          <span>🧮</span> <span [appScramble]="'sidebar.calculator' | translate"></span>
         </button>
       </div>
 
       <!-- Scrollable List -->
       <div class="flex-1 overflow-y-auto px-4 py-2 space-y-1 scrollbar-hide">
-          <div *ngIf="budgets().length > 0" class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 px-1">{{ 'sidebar.your_budgets' | translate }}</div>
+          <div *ngIf="budgets().length > 0" class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 px-1"
+               [appScramble]="'sidebar.your_budgets' | translate"></div>
           
           <button *ngFor="let budget of budgets()"
             (click)="selectBudget.emit(budget.id)"
@@ -93,12 +95,12 @@ import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
          </div>
 
          <button (click)="exportData.emit()" class="w-full py-2.5 flex items-center justify-center gap-2 text-blue-400 hover:bg-blue-500/10 rounded-xl transition-all text-sm font-semibold">
-           <span>💾</span> {{ 'sidebar.export' | translate }}
+           <span>💾</span> <span [appScramble]="'sidebar.export' | translate"></span>
          </button>
 
          <button (click)="logout.emit()" class="w-full py-2.5 flex items-center justify-center gap-2 text-red-400 hover:bg-red-500/10 rounded-xl transition-all text-sm font-semibold group">
            <span class="group-hover:-translate-x-1 transition-transform">←</span>
-           {{ 'sidebar.logout' | translate }}
+           <span [appScramble]="'sidebar.logout' | translate"></span>
          </button>
       </div>
     </aside>
