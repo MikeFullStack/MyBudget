@@ -12,6 +12,7 @@ import {
 import { db, firebaseConfig } from '../core/firebase-init';
 import { Budget, Transaction } from '../shared/models/budget.models';
 import { AuthService } from './auth.service';
+import { LoggerService } from '../core/services/logger.service';
 
 // declare const __app_id: string | undefined;
 // const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
@@ -20,6 +21,7 @@ import { AuthService } from './auth.service';
 export class BudgetService {
     private db: Firestore = db;
     private authService = inject(AuthService);
+    private logger = inject(LoggerService);
 
     // State
     readonly budgets = signal<Budget[]>([]);
@@ -37,6 +39,7 @@ export class BudgetService {
             }
 
             this.isLoading.set(true);
+            this.logger.phase('DONNÉES', 'Synchronisation avec le cloud...');
             const appId = 'mon-budget';
             const q = query(collection(this.db, 'artifacts', appId, 'users', user.uid, 'budgets'));
 
@@ -45,11 +48,12 @@ export class BudgetService {
                     const data = snapshot.docs.map(d => d.data() as Budget);
                     this.budgets.set(data);
                     this.isLoading.set(false);
+                    this.logger.success(`${data.length} budgets chargés.`);
                     // Check for recurring transactions
                     this.processRecurringTransactions(data);
                 },
                 error: (err) => {
-                    console.error('[BudgetService] Fetch error:', err);
+                    this.logger.error('Échec du chargement des données', err);
                     this.isLoading.set(false);
                 }
             });
