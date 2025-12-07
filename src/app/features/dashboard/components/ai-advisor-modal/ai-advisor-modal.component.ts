@@ -14,50 +14,64 @@ interface ChatMessage {
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
-      <div class="bg-white dark:bg-gray-900 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border border-gray-100 dark:border-gray-800 flex flex-col h-[80vh] md:h-[90vh]">
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in bg-black/20 backdrop-blur-sm">
+      <!-- Main Card: Glassmorphism & Apple-style Rounded Corners -->
+      <div class="w-full max-w-2xl h-[85vh] flex flex-col overflow-hidden bg-white/95 dark:bg-[#1C1C1E]/95 backdrop-blur-2xl rounded-[2rem] shadow-2xl border border-white/20 dark:border-white/10 relative ring-1 ring-black/5">
         
-        <!-- Header -->
-        <div class="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-gray-800 shrink-0">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-purple-600 flex items-center justify-center text-white text-xl shadow-lg">
-              ✨
-            </div>
-            <div>
-              <h2 class="text-xl font-bold text-gray-900 dark:text-white">Conseiller AI</h2>
-              <p class="text-xs text-blue-600 dark:text-blue-400 font-medium">Propulsé par Gemini 1.5 Pro</p>
-            </div>
-          </div>
-          <button (click)="close.emit()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+        <!-- Header (Sticky, Minimal) -->
+        <div class="px-4 py-3 flex items-center justify-between bg-white/80 dark:bg-[#1C1C1E]/80 backdrop-blur-md sticky top-0 z-10 border-b border-gray-200/50 dark:border-gray-800/50">
+           <!-- Close Button (Circle with X) -->
+           <button (click)="close.emit()" class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-200/50 dark:bg-gray-700/50 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+              <span class="text-gray-500 dark:text-gray-400 text-lg leading-none">&times;</span>
+           </button>
+           
+           <!-- Title Centered -->
+           <div class="text-center">
+              <h2 class="text-[15px] font-semibold text-gray-900 dark:text-white">Conseiller Budget</h2>
+              <div class="flex items-center justify-center gap-1.5 opacity-60">
+                <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                <span class="text-[10px] text-gray-500 dark:text-gray-400 font-medium tracking-wide uppercase">Gemini 2.0</span>
+              </div>
+           </div>
+           
+           <!-- Spacer for symmetry or Menu -->
+           <div class="w-8 h-8"></div> 
         </div>
 
-        <!-- Chat Content -->
-        <div class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-black/20" #scrollContainer>
-            
+        <!-- Chat Area (Clean, flexible bubbles) -->
+        <div class="flex-1 overflow-y-auto p-4 space-y-6 bg-transparent scroll-smooth" #scrollContainer>
+           
+            <!-- Disclaimer -->
+            <div class="text-center py-4">
+                <span class="px-3 py-1 rounded-full bg-gray-100 dark:bg-[#2C2C2E] text-[10px] text-gray-500 border border-gray-200 dark:border-gray-700">
+                    L'IA peut faire des erreurs. Vérifiez vos données.
+                </span>
+            </div>
+
             @for (msg of messages(); track $index) {
-                <div [class.flex-row-reverse]="msg.role === 'user'" class="flex items-start gap-3">
-                    <!-- Avatar -->
-                    <div [class.bg-blue-600]="msg.role === 'user'" [class.bg-purple-600]="msg.role === 'assistant'" class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs shrink-0 shadow-sm mt-1">
-                        {{ msg.role === 'user' ? 'Moi' : 'AI' }}
-                    </div>
+                <div [class.justify-end]="msg.role === 'user'" [class.justify-start]="msg.role === 'assistant'" class="flex items-end gap-2 group">
+                    
+                    <!-- Avatar (AI only) -->
+                    @if (msg.role === 'assistant') {
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-purple-600 flex items-center justify-center text-white text-[10px] shadow-sm shrink-0 mb-1">
+                            ✨
+                        </div>
+                    }
 
                     <!-- Bubble -->
-                    <div [class.bg-blue-600]="msg.role === 'user'" 
+                    <div [class.bg-[#007AFF]]="msg.role === 'user'" 
                          [class.text-white]="msg.role === 'user'"
-                         [class.bg-white]="msg.role === 'assistant'" 
-                         [class.dark:bg-gray-800]="msg.role === 'assistant'"
-                         [class.text-gray-800]="msg.role === 'assistant'"
-                         [class.dark:text-gray-200]="msg.role === 'assistant'"
-                         class="max-w-[80%] p-4 rounded-2xl shadow-sm text-sm leading-relaxed"
-                         [class.rounded-tr-none]="msg.role === 'user'"
-                         [class.rounded-tl-none]="msg.role === 'assistant'">
+                         [class.rounded-2xl]="true"
+                         [class.rounded-br-sm]="msg.role === 'user'"
+                         [class.bg-[#E9E9EB]]="msg.role === 'assistant'" 
+                         [class.dark:bg-[#2C2C2E]]="msg.role === 'assistant'"
+                         [class.text-black]="msg.role === 'assistant'"
+                         [class.dark:text-white]="msg.role === 'assistant'"
+                         [class.rounded-bl-sm]="msg.role === 'assistant'"
+                         class="max-w-[75%] px-5 py-3 shadow-sm text-[15px] leading-relaxed relative transition-all duration-200 hover:shadow-md">
                         
                         @if (msg.isMarkdown) {
-                             <div class="prose dark:prose-invert max-w-none text-sm whitespace-pre-wrap" [innerHTML]="msg.content"></div>
+                             <div class="prose dark:prose-invert prose-p:my-1 prose-ul:my-1 prose-li:my-0 max-w-none text-[15px]" [innerHTML]="msg.content"></div>
                         } @else {
                             {{ msg.content }}
                         }
@@ -66,45 +80,47 @@ interface ChatMessage {
             }
 
             @if (isLoading()) {
-                <div class="flex items-start gap-3 animate-pulse">
-                     <div class="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center text-white text-xs shrink-0">AI</div>
-                     <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl rounded-tl-none shadow-sm space-y-2 w-48">
-                        <div class="h-2 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
-                        <div class="h-2 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                <div class="flex justify-start items-center gap-2">
+                     <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-purple-600 flex items-center justify-center text-white text-[10px] shrink-0">✨</div>
+                     <div class="bg-[#E9E9EB] dark:bg-[#2C2C2E] px-4 py-3 rounded-2xl rounded-bl-sm flex gap-1.5 items-center">
+                        <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                        <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                        <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
                      </div>
                 </div>
             }
             
             @if (error()) {
-                <div class="flex justify-center">
-                    <div class="bg-red-50 text-red-600 px-4 py-2 rounded-lg text-xs font-bold shadow-sm border border-red-100">
+                <div class="flex justify-center my-4">
+                    <div class="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-4 py-2 rounded-xl text-xs font-medium border border-red-100 dark:border-red-900/50 flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
                         {{ error() }}
                     </div>
                 </div>
             }
         </div>
 
-        <!-- Input Area -->
-        <div class="p-4 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shrink-0">
-            <div class="flex gap-2">
+        <!-- Input Area (Floating Pill) -->
+        <div class="p-4 bg-white/80 dark:bg-[#1C1C1E]/80 backdrop-blur-xl border-t border-gray-100/50 dark:border-gray-800/50">
+            <div class="relative flex items-center group">
                 <input 
                     type="text" 
                     [(ngModel)]="userInput" 
                     (keydown.enter)="sendMessage()"
-                    placeholder="Posez une question sur votre budget..." 
-                    class="flex-1 bg-gray-100 dark:bg-gray-800 border-0 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 transition-all dark:text-white"
+                    placeholder="Message..." 
+                    class="w-full bg-gray-100 dark:bg-[#2C2C2E] text-gray-900 dark:text-white rounded-full py-3.5 pl-5 pr-12 focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 placeholder-gray-500 dark:placeholder-gray-400 text-[15px] transition-all"
                     [disabled]="isLoading()"
                 >
+                
                 <button 
                     (click)="sendMessage()" 
                     [disabled]="!userInput.trim() || isLoading()"
-                    class="bg-black dark:bg-white text-white dark:text-black p-3 rounded-xl hover:opacity-80 disabled:opacity-50 transition-all shadow-md">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    class="absolute right-1.5 p-2 bg-[#007AFF] rounded-full text-white hover:bg-blue-600 disabled:opacity-50 disabled:bg-gray-300 dark:disabled:bg-gray-600 transition-all duration-200 shadow-sm hover:scale-105 active:scale-95 flex items-center justify-center w-9 h-9">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-0.5" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
                     </svg>
                 </button>
             </div>
-             <p class="text-center text-[10px] text-gray-400 mt-2">L'IA peut faire des erreurs. Vérifiez toujours vos données.</p>
         </div>
 
       </div>
