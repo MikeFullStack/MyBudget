@@ -102,4 +102,22 @@ describe('BudgetWizardComponent', () => {
             })
         }));
     });
+
+    it('should emit close event when backdrop or close button is clicked', () => {
+        const emitSpy = vi.spyOn(component.close, 'emit');
+
+        // Simulate backdrop click
+        // In a real DOM test we'd click the element, here we just verify the method if we called it,
+        // but closely looking at the template, triggering the click on the host element's child (backdrop)
+        const backdrop = fixture.debugElement.query(By.css('.fixed.inset-0'));
+        backdrop.triggerEventHandler('click', null);
+        expect(emitSpy).toHaveBeenCalled();
+
+        emitSpy.mockClear();
+
+        // Simulate X button click
+        const closeBtn = fixture.debugElement.query(By.css('button.absolute'));
+        closeBtn.triggerEventHandler('click', null);
+        expect(emitSpy).toHaveBeenCalled();
+    });
 });

@@ -9,9 +9,16 @@ import { MonthlyExpense, Budget } from '../../../../shared/models/budget.models'
     standalone: true,
     imports: [CommonModule, FormsModule, TranslatePipe],
     template: `
-    <div class="fixed inset-0 bg-black/50 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
-      <div class="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div class="fixed inset-0 bg-black/50 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in" (click)="close.emit()">
+      <div class="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] relative" (click)="$event.stopPropagation()">
         
+        <!-- Close Button -->
+        <button (click)="close.emit()" class="absolute top-6 right-6 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-black dark:hover:text-white transition-colors z-10">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+
         <!-- Progress Bar -->
         <div class="h-1 bg-gray-100 dark:bg-gray-800 w-full">
             <div class="h-full bg-black dark:bg-white transition-all duration-500 ease-out" [style.width.%]="progress()"></div>
