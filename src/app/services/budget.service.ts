@@ -116,6 +116,20 @@ export class BudgetService {
 
                 const unsubShared = onSnapshot(sharedQuery, (snap) => {
                     sharedBudgets = snap.docs.map(d => ({ ...d.data(), id: d.id } as Budget));
+
+                    // Start Migration Check: Add Self ID if missing
+                    sharedBudgets.forEach(b => {
+                        const hasMyId = b.participantIds?.includes(user.uid);
+                        // If I see it (via email rule) but my ID is not in the secure list, ADD IT.
+                        if (!hasMyId) {
+                            console.log(`Migrating budget ${b.name} to UID permissions...`);
+                            const ref = doc(this.db, 'artifacts', 'mon-budget', 'users', b.ownerId || user.uid, 'budgets', b.id);
+                            updateDoc(ref, {
+                                participantIds: arrayUnion(user.uid)
+                            }).catch(e => console.error('Migration failed', e)); // Fail silently/log
+                        }
+                    });
+
                     updateState();
                 }, (err) => {
                     console.error('Shared budgets listener error', err);
@@ -142,7 +156,8 @@ export class BudgetService {
                 id: budgetRef.id,
                 name,
                 ownerId: user.uid,
-                participants: [],
+                participants: [user.email || ''], // Legacy & for Invite display
+                participantIds: [user.uid], // Secure Access
                 themeColor,
                 icon,
                 // transactions: [], // REMOVED: Managed in subcollection now

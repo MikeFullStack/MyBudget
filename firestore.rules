@@ -18,22 +18,24 @@ service cloud.firestore {
     }
 
     // 2. Shared Access (Collection Group)
-    // We allow reading budgets where user is a participant.
-    // NOTE: Writing to shared budgets requires knowing the path, which currently must be 'artifacts/mon-budget/users/{ownerId}/budgets/{budgetId}'
     match /{path=**}/budgets/{budgetId} {
-      allow read: if request.auth != null && resource.data.participants.hasAny([request.auth.token.email]);
+      // Helper to check permissions
+      function isParticipant(rsc) {
+        let hasEmail = 'participants' in rsc.data && rsc.data.participants.hasAny([request.auth.token.email]);
+        let hasUid = 'participantIds' in rsc.data && rsc.data.participantIds.hasAny([request.auth.uid]);
+        return hasEmail || hasUid;
+      }
+
+      allow read: if request.auth != null && isParticipant(resource);
+      allow update: if request.auth != null && isParticipant(resource);
       
-      // Allow updating ONLY if participant (e.g. adding transaction?)
-      // For strict security, we'd need to verify the path owner, but for now we trust the participants list on the doc.
-      allow update: if request.auth != null && resource.data.participants.hasAny([request.auth.token.email]);
-      
+      // Allow 'claim' (adding self to participantIds) if we are in email list
+      // This is covered by 'allow update' above if we are in email list.
+
       // Subcollection access for shared budgets
       match /transactions/{txId} {
-        // We need to check the PARENT budget's participants. 
-        // Firestore rules cannot easily read parent doc in collection group query context efficiently without 'get'.
-        // BUT, since we are usually accessing via known path for writes:
         allow read, write: if request.auth != null && 
-                           get(/databases/$(database)/documents/$(path)/budgets/$(budgetId)).data.participants.hasAny([request.auth.token.email]);
+                           isParticipant(get(/databases/$(database)/documents/$(path)/budgets/$(budgetId)));
       }
     }
   }

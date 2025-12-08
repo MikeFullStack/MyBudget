@@ -48,5 +48,6 @@ export interface Budget {
     goals?: SavingsGoal[];
     recurring?: RecurringTransaction[];
     ownerId?: string;
-    participants?: string[];
+    participants?: string[]; // Emails (Legacy/Invite)
+    participantIds?: string[]; // UIDs (Secure)
 }
