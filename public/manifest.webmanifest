@@ -1,8 +1,8 @@
 {
   "name": "Mon Budget",
   "short_name": "Mes Finances",
-  "theme_color": "#ffffff",
-  "background_color": "#ffffff",
+  "theme_color": "#0F172A",
+  "background_color": "#0F172A",
   "display": "standalone",
   "scope": "./",
   "start_url": "./",
